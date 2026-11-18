@@ -1,1962 +1,2300 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="artifact-type" content="narrative">
-  <meta name="design-style" content="kiln">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/scrollama@3.2.0/build/scrollama.min.js"></script>
+  <!-- 引入 Google Fonts：Noto Serif TC（人文標題）與 Noto Sans TC（清晰內文） -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet" />
 
+  <!-- 引入 Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 自訂 Tailwind 主題色彩與字體配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#FAF8F5',       // 溫潤宣紙米白背景
+            paperDark: '#F2EEE7',   // 宣紙深層卡片底色
+            ink: '#1B2A2F',         // 深墨青主色
+            inkLight: '#3D5057',    // 淡墨青次要文字
+            mist: '#2D5A4C',        // 山嵐翡翠綠
+            mistLight: '#E6EFEA',   // 淺山嵐綠底色
+            bronze: '#B8860B',      // 古銅金點綴
+            bronzeLight: '#F7F1E1', // 淺古銅金底色
+            cinnabar: '#9E3B33',    // 傳統印泥朱紅（印章點綴）
+          },
+          fontFamily: {
+            serif: ['"Noto Serif TC"', 'serif'],
+            sans: ['"Noto Sans TC"', 'sans-serif'],
+          },
+          boxShadow: {
+            editorial: '0 10px 30px -10px rgba(27, 42, 47, 0.08), 0 4px 12px -4px rgba(27, 42, 47, 0.04)',
+            editorialHover: '0 18px 40px -12px rgba(27, 42, 47, 0.14), 0 6px 16px -4px rgba(45, 90, 76, 0.08)',
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- 自訂水墨細節與動畫樣式 -->
   <style>
-    :root {
-      color-scheme: light;
-
-      /* 1. Kiln style tokens */
-      --background: #f4f1ea;
-      --surface-container-low: #ebe6db;
-      --surface-container: #e3ddd0;
-      --surface-container-high: #d9d1c2;
-
-      --on-surface: #1c1b18;
-      --on-surface-variant: #5e5a51;
-
-      --outline: #1c1b18;
-      --outline-variant: #d2cbbd;
-
-      --primary: #1c1b18;
-      --on-primary: #f4f1ea;
-      --primary-container: #ebe6db;
-      --on-primary-container: #1c1b18;
-      --secondary: #4a5d46;
-      --tertiary: #9e3b2b;
-      --error: #9e2a22;
-      --on-error: #f4f1ea;
-
-      --data-1: #4a5d46;
-      --data-2: #9e3b2b;
-      --data-3: #1c1b18;
-      --data-4: #8a6f48;
-      --data-context: #c7bfb0;
-
-      /* Map harmonized tokens */
-      --map-ocean: #dce2de;
-      --map-land: #ebe6db;
-      --map-land-border: #aba393;
-
-      --font-headline: 'Shippori Mincho', 'Noto Serif TC', serif;
-      --font-body: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
-      --font-label: 'Geist Mono', 'Noto Sans TC', monospace;
-
-      --rounded: 0.125rem;
-      --rounded-lg: 0.125rem;
-      --rounded-full: 0.125rem;
-
-      --rule-sumi-left: 2px solid var(--outline);
-      --rule-sumi: 1px solid var(--outline);
-      --rule-linen: 1px solid var(--outline-variant);
-      --label-tracking: 0.12em;
-
-      /* 3. Shared tokens */
-      --positive: #4a5d46;
-      --warning: #8a6f48;
-      --focus: #1c1b18;
-
-      --display-size: clamp(2.15rem, 1.35rem + 3vw, 3.65rem);
-      --headline-size: clamp(1.55rem, 1.2rem + 1.4vw, 2.25rem);
-      --subhead-size: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);
-      --body-size: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
-      --label-size: 0.75rem;
-
-      --space-xs: 0.25rem;
-      --space-sm: 0.5rem;
-      --space-md: 1rem;
-      --space-lg: 1.5rem;
-      --space-xl: 2.5rem;
-      --space-2xl: 4rem;
-      --space-3xl: 6rem;
-
-      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-      --dur-micro: 120ms;
-      --dur-short: 220ms;
-      --dur-long: 420ms;
-    }
-
-    /* Base reset */
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body {
-      overflow-x: clip;
-      margin: 0;
-      padding: 0;
-      background: var(--background);
-      color: var(--on-surface);
-      font-family: var(--font-body);
-      font-size: var(--body-size);
-      line-height: 1.65;
+    html {
       scroll-behavior: smooth;
-    }
-    header { position: static !important; }
-    button, input, select, textarea { font-family: inherit; }
-
-    /* Focus rings */
-    :focus-visible {
-      outline: 2px solid var(--focus);
-      outline-offset: 2px;
+      background-color: #FAF8F5;
+      color: #1B2A2F;
     }
 
-    /* Layout containers — note overflow-x: clip only, never overflow: hidden on scrolly ancestors */
-    .wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 var(--space-lg);
-      overflow-x: clip;
-    }
-    .wrap * { min-width: 0; }
-
-    /* Hero Masthead */
-    .hero {
-      padding: var(--space-2xl) 0 var(--space-xl);
-      border-bottom: var(--rule-linen);
-      display: grid;
-      gap: var(--space-xl);
-    }
-    .hero-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-lg);
-    }
-    .hero-copy {
-      max-width: 68ch;
-      display: grid;
-      gap: var(--space-sm);
-    }
-    .kicker {
-      font-family: var(--font-label);
-      font-weight: 500;
-      font-size: var(--label-size);
-      letter-spacing: var(--label-tracking);
-      color: var(--secondary);
-      text-transform: uppercase;
-    }
-    .display-title {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: var(--display-size);
-      line-height: 1.15;
-      letter-spacing: -0.01em;
-      color: var(--on-surface);
-      margin: 0;
-    }
-    .subhead-moss {
-      font-family: var(--font-headline);
-      font-weight: 500;
-      font-size: var(--subhead-size);
-      line-height: 1.45;
-      color: var(--secondary);
-      margin: var(--space-xs) 0 0;
-      max-width: 58ch;
-    }
-    .hero-meta-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      align-items: center;
-      margin-top: var(--space-sm);
-    }
-    .seal-stamp {
-      border: 1px solid var(--tertiary);
-      color: var(--tertiary);
-      font-family: var(--font-label);
-      font-size: 0.75rem;
-      letter-spacing: 0.16em;
-      padding: 0.5rem 0.4rem;
-      writing-mode: vertical-rl;
-      text-orientation: upright;
-      flex-shrink: 0;
-      line-height: 1.2;
-      user-select: none;
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background-color: #FAF8F5;
+      /* 細膩宣紙纖維光影漸層 */
+      background-image: 
+        radial-gradient(at 15% 10%, rgba(45, 90, 76, 0.04) 0px, transparent 50%),
+        radial-gradient(at 85% 25%, rgba(184, 134, 11, 0.045) 0px, transparent 55%),
+        radial-gradient(at 50% 85%, rgba(27, 42, 47, 0.03) 0px, transparent 60%);
+      overflow-x: hidden;
     }
 
-    /* Quick jump nav */
-    .section-nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      padding: var(--space-md) 0;
-      border-bottom: var(--rule-linen);
+    /* 隱藏橫向捲動軸但保留滑動功能 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
     }
-    .nav-link {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      min-height: 44px;
-      padding: 0 var(--space-md);
-      background: var(--surface-container-low);
-      border: var(--rule-linen);
-      border-radius: var(--rounded);
-      color: var(--on-surface);
-      text-decoration: none;
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      letter-spacing: 0.04em;
-      transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
-    }
-    .nav-link:hover {
-      background: var(--surface-container-high);
-      border-color: var(--outline);
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
 
-    /* Washi cards */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
-      gap: var(--space-md);
-    }
-    .washi-card {
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-      padding: var(--space-md) var(--space-lg);
-      display: grid;
-      gap: var(--space-xs);
-    }
-    .washi-card .label {
-      font-family: var(--font-label);
-      font-weight: 500;
-      font-size: var(--label-size);
-      color: var(--on-surface-variant);
-      letter-spacing: 0.06em;
-    }
-    .washi-card .value {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: clamp(1.35rem, 1.15rem + 0.8vw, 1.85rem);
-      line-height: 1.2;
-      color: var(--on-surface);
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-    .washi-card .note {
-      color: var(--secondary);
-      font-size: 0.875rem;
-      font-weight: 500;
+    /* 頁面切換淡入過渡 */
+    .tab-panel {
+      animation: fadeSlideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    /* Section framing */
-    .section-block {
-      padding: var(--space-2xl) 0;
-      border-bottom: var(--rule-linen);
-    }
-    .section-header {
-      display: grid;
-      gap: var(--space-xs);
-      margin-bottom: var(--space-xl);
-      max-width: 68ch;
-    }
-    .section-title {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: var(--headline-size);
-      line-height: 1.2;
-      letter-spacing: -0.01em;
-      color: var(--on-surface);
-      margin: 0;
-    }
-    .section-lede {
-      color: var(--on-surface-variant);
-      margin: var(--space-xs) 0 0;
-      max-width: 62ch;
-    }
-
-    /* Buttons & Tags */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--space-sm);
-      min-height: 44px;
-      padding: 0 var(--space-md);
-      border-radius: var(--rounded);
-      font-family: var(--font-label);
-      font-size: 0.8125rem;
-      font-weight: 500;
-      letter-spacing: 0.04em;
-      cursor: pointer;
-      border: var(--rule-sumi);
-      background: var(--surface-container-low);
-      color: var(--on-surface);
-      transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
-    }
-    .btn:hover {
-      background: var(--surface-container-high);
-    }
-    .btn.is-active, .btn-primary {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary);
-    }
-    .btn-primary:hover {
-      background: var(--secondary);
-      border-color: var(--secondary);
-    }
-    .btn-subtle {
-      border: var(--rule-linen);
-      background: var(--background);
-      color: var(--on-surface-variant);
-    }
-    .btn-subtle.is-saved {
-      border-color: var(--tertiary);
-      color: var(--tertiary);
-      background: var(--surface-container-low);
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--space-xs);
-      padding: 0.2rem 0.55rem;
-      border-radius: var(--rounded);
-      border: var(--rule-linen);
-      background: var(--surface-container-low);
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
-    }
-    .tag-cinnabar {
-      border-color: var(--tertiary);
-      color: var(--tertiary);
-    }
-
-    /* Tables (Kiln style: 1px sumi top/bottom header, linen row dividers) */
-    .table-wrap {
-      overflow-x: auto;
-      border-top: var(--rule-sumi);
-      border-bottom: var(--rule-sumi);
-    }
-    table.kiln-table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-      font-size: 0.9375rem;
-    }
-    table.kiln-table thead th {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      font-weight: 500;
-      color: var(--secondary);
-      padding: var(--space-md) var(--space-sm);
-      border-bottom: var(--rule-sumi);
-      white-space: nowrap;
-    }
-    table.kiln-table tbody td {
-      padding: var(--space-md) var(--space-sm);
-      border-bottom: var(--rule-linen);
-      vertical-align: middle;
-    }
-    table.kiln-table tbody tr:last-child td {
-      border-bottom: none;
-    }
-    table.kiln-table tbody tr.is-selected-row {
-      background: var(--surface-container-low);
-    }
-    .mono-num {
-      font-family: var(--font-label);
-      font-variant-numeric: lining-nums tabular-nums;
-    }
-
-    .flight-controls {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--space-md);
-      margin-top: var(--space-lg);
-      padding: var(--space-md) var(--space-lg);
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-    }
-    .btn-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-    }
-
-    /* ══ PIN CORE — Scrollytelling Route Map ══ */
-    .scrolly {
-      display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-      gap: var(--space-xl);
-      align-items: start;
-    }
-    .scrolly-graphic {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      display: grid;
-      align-content: center;
-      margin: 0;
-      padding: var(--space-md) 0;
-    }
-    .map-frame {
-      background: var(--surface-container-low);
-      border: var(--rule-sumi);
-      border-radius: var(--rounded);
-      display: grid;
-      grid-template-rows: auto 1fr auto;
-      overflow: hidden;
-    }
-    .map-topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--space-sm);
-      padding: var(--space-sm) var(--space-md);
-      border-bottom: var(--rule-linen);
-      background: var(--background);
-    }
-    .map-day-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-xs);
-    }
-    .day-pill {
-      min-width: 34px;
-      min-height: 34px;
-      padding: 0 0.45rem;
-      border: var(--rule-linen);
-      border-radius: var(--rounded);
-      background: var(--background);
-      color: var(--on-surface-variant);
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      cursor: pointer;
-      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
-    }
-    .day-pill:hover {
-      background: var(--surface-container-high);
-      color: var(--on-surface);
-    }
-    .day-pill.is-active {
-      background: var(--tertiary);
-      border-color: var(--tertiary);
-      color: var(--on-primary);
-    }
-    #route-map {
-      width: 100%;
-      height: 58vh;
-      min-height: 380px;
-      max-height: 560px;
-      background: var(--map-ocean);
-      z-index: 1;
-    }
-    .leaflet-container {
-      background: var(--map-ocean);
-      font-family: var(--font-body);
-    }
-    .map-caption-bar {
-      padding: var(--space-md);
-      border-top: var(--rule-linen);
-      background: var(--surface-container-low);
-      display: grid;
-      gap: var(--space-xs);
-    }
-    .map-caption-route {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: 1.0625rem;
-      color: var(--on-surface);
-    }
-    .map-caption-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-md);
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
-    }
-
-    .steps {
-      padding: 12vh 0 24vh;
-      display: grid;
-      gap: var(--space-xl);
-    }
-    .step {
-      min-height: 58vh;
-      display: grid;
-      align-content: center;
-    }
-    .step-card {
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-top: var(--rule-linen);
-      border-right: var(--rule-linen);
-      border-bottom: var(--rule-linen);
-      border-radius: var(--rounded);
-      padding: var(--space-lg);
-      opacity: 0.58;
-      transform: translateY(6px);
-      transition: opacity var(--dur-long) var(--ease-out), transform var(--dur-long) var(--ease-out), background-color var(--dur-short) var(--ease-out);
-      display: grid;
-      gap: var(--space-md);
-    }
-    .step.is-active .step-card {
-      opacity: 1;
-      transform: none;
-      background: var(--background);
-      border-left-color: var(--tertiary);
-    }
-    .step-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: var(--space-sm);
-    }
-    .step-idx {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--tertiary);
-      letter-spacing: 0.08em;
-    }
-    .step-title {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: 1.375rem;
-      line-height: 1.3;
-      margin: var(--space-xs) 0 0;
-      color: var(--on-surface);
-    }
-    .step-body {
-      margin: 0;
-      color: var(--on-surface);
-      max-width: 58ch;
-    }
-    .highlight-note {
-      padding: var(--space-sm) var(--space-md);
-      background: var(--surface-container);
-      border-left: 2px solid var(--secondary);
-      border-radius: var(--rounded);
-      font-size: 0.9375rem;
-      color: var(--on-surface);
-    }
-    .highlight-note strong {
-      color: var(--secondary);
-      font-family: var(--font-headline);
-    }
-    .step-logistics {
-      display: grid;
-      gap: var(--space-xs);
-      padding-top: var(--space-sm);
-      border-top: var(--rule-linen);
-      font-size: 0.875rem;
-      color: var(--on-surface-variant);
-    }
-    .logistics-row {
-      display: flex;
-      gap: var(--space-sm);
-      align-items: baseline;
-    }
-    .logistics-key {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
-      min-width: 3.5rem;
-      flex-shrink: 0;
-    }
-
-    @media (max-width: 900px) {
-      .scrolly {
-        grid-template-columns: 1fr;
+    @keyframes fadeSlideUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
       }
-      .scrolly-graphic {
-        position: sticky;
-        top: 0;
-        height: auto;
-        z-index: 10;
-        background: var(--background);
-        padding: var(--space-sm) 0;
-        border-bottom: var(--rule-linen);
-      }
-      #route-map {
-        height: 36vh;
-        min-height: 260px;
-      }
-      .steps {
-        padding: var(--space-lg) 0 var(--space-xl);
-        gap: var(--space-lg);
-      }
-      .step {
-        min-height: auto;
-      }
-      .step-card {
+      to {
         opacity: 1;
-        transform: none;
+        transform: translateY(0);
       }
     }
 
-    /* Mountain Trail Schematic Explorer (Day 5 & Day 6) */
-    .trail-tabs {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
+    /* 雲霧緩慢飄動效果 */
+    @keyframes mistFloat {
+      0%, 100% { transform: translateX(0px); }
+      50% { transform: translateX(14px); }
     }
-    .trail-panel {
-      display: grid;
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-      gap: var(--space-lg);
-      align-items: start;
-    }
-    @media (max-width: 820px) {
-      .trail-panel {
-        grid-template-columns: 1fr;
-      }
-    }
-    .trail-svg-box {
-      background: var(--surface-container-low);
-      border: var(--rule-linen);
-      border-radius: var(--rounded);
-      padding: var(--space-md);
-    }
-    .trail-svg {
-      width: 100%;
-      height: auto;
-      display: block;
-      min-height: 280px;
-    }
-    .trail-node {
-      cursor: pointer;
-    }
-    .trail-node circle {
-      transition: r var(--dur-micro) var(--ease-out), fill var(--dur-micro) var(--ease-out);
-    }
-    .trail-detail {
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-      padding: var(--space-lg);
-      display: grid;
-      gap: var(--space-md);
-    }
-    .trail-stop-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-xs);
-    }
-    .trail-stop-btn {
-      min-height: 44px;
-      padding: 0 var(--space-sm);
-      border: var(--rule-linen);
-      border-radius: var(--rounded);
-      background: var(--background);
-      color: var(--on-surface);
-      font-size: 0.8125rem;
-      cursor: pointer;
-    }
-    .trail-stop-btn.is-active {
-      background: var(--primary);
-      color: var(--on-primary);
-      border-color: var(--primary);
+    .animate-mist {
+      animation: mistFloat 12s ease-in-out infinite;
     }
 
-    /* Filterable Heritage / Towns Grid */
-    .filter-bar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      margin-bottom: var(--space-lg);
+    /* SVG 路線節點呼吸光暈 */
+    @keyframes pulseRing {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      70% { transform: scale(1.65); opacity: 0; }
+      100% { transform: scale(1.65); opacity: 0; }
     }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-      gap: var(--space-lg);
-    }
-    .heritage-card {
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-      padding: var(--space-lg);
-      display: grid;
-      gap: var(--space-sm);
-      align-content: start;
-      transition: background-color var(--dur-short) var(--ease-out);
-    }
-    .heritage-card:hover {
-      background: var(--surface-container);
-    }
-    .heritage-card h3 {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: 1.25rem;
-      margin: 0;
-      line-height: 1.3;
-    }
-    .heritage-card p {
-      margin: 0;
-      font-size: 0.9375rem;
-      color: var(--on-surface-variant);
+    .node-pulse {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: pulseRing 2.6s cubic-bezier(0.24, 0, 0.38, 1) infinite;
     }
 
-    /* Stays & Culinary Matrix */
-    .stay-food-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
-      gap: var(--space-md);
-    }
-    .day-guide-card {
-      background: var(--surface-container-low);
-      border: var(--rule-linen);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-      padding: var(--space-md) var(--space-lg);
-      display: grid;
-      gap: var(--space-sm);
-    }
-    .day-guide-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: var(--space-sm);
-      border-bottom: var(--rule-linen);
-      padding-bottom: var(--space-xs);
-    }
-    .day-guide-hotel {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: 1.0625rem;
-      color: var(--on-surface);
-    }
-    .meal-list {
-      display: grid;
-      gap: var(--space-xs);
-      font-size: 0.9rem;
-    }
-    .meal-item {
-      display: flex;
-      gap: var(--space-sm);
-    }
-    .meal-period {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
-      min-width: 2.5rem;
+    /* 傳統直排印章外框 */
+    .seal-stamp {
+      border: 1.5px solid #9E3B33;
+      color: #9E3B33;
+      box-shadow: inset 0 0 0 1px rgba(158, 59, 51, 0.25);
     }
 
-    /* Historical Essays */
-    .history-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
-      gap: var(--space-lg);
-    }
-    .history-panel {
-      padding: var(--space-lg);
-      background: var(--background);
-      border-top: var(--rule-sumi);
-      border-bottom: var(--rule-linen);
-      display: grid;
-      gap: var(--space-sm);
-      align-content: start;
-    }
-    .history-panel h3 {
-      font-family: var(--font-headline);
-      font-weight: 600;
-      font-size: 1.2rem;
-      margin: 0;
-    }
-    .history-panel p {
-      margin: 0;
-      color: var(--on-surface-variant);
-      font-size: 0.9375rem;
-    }
-
-    /* Notebook / Bookmark Summary Panel */
-    .notebook-panel {
-      background: var(--surface-container-low);
-      border-left: var(--rule-sumi-left);
-      border-radius: var(--rounded);
-      padding: var(--space-lg);
-      display: grid;
-      gap: var(--space-md);
-    }
-    .notebook-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-sm);
-      align-items: center;
-    }
-    .status-msg {
-      font-family: var(--font-label);
-      font-size: var(--label-size);
-      color: var(--secondary);
-      min-height: 1.2em;
-    }
-
-    /* Footer */
-    .site-footer {
-      padding: var(--space-xl) 0 var(--space-2xl);
-      display: grid;
-      gap: var(--space-xs);
-      color: var(--on-surface-variant);
-      font-size: 0.875rem;
-    }
-
-    /* Mobile spacing */
-    @media (max-width: 640px) {
-      .wrap { padding: 0 var(--space-md); }
-      .hero { padding: var(--space-xl) 0 var(--space-lg); }
-      .hero-top { flex-direction: column-reverse; }
-      .seal-stamp { writing-mode: horizontal-tb; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        animation-duration: 0.01ms !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-      }
+    /* 編輯器雜誌風引用框 */
+    .editorial-quote {
+      border-left: 3px solid #B8860B;
+      background: linear-gradient(90deg, rgba(184, 134, 11, 0.07) 0%, rgba(250, 248, 245, 0.4) 100%);
     }
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <!-- Hero Masthead -->
-    <header class="hero">
-      <div class="hero-top">
-        <div class="hero-copy">
-          <span class="kicker">2027.04.17 — 04.25 · 滬 · 浙 · 皖 · 贛</span>
-          <h1 class="display-title">巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊</h1>
-          <p class="subhead-moss">跨越上海、浙江、安徽與江西四省市的順時針大環線——從外灘十里洋場與水鄉古鎮出發，登臨黃山、三清山花崗岩奇境，探訪古徽州宗族牌坊與南孔儒風，並走進義烏世界超市的九日行旅。</p>
-          <div class="hero-meta-row">
-            <span class="tag"><i data-lucide="calendar" width="14" height="14" aria-hidden="true"></i> 2027年4月17日（六）～ 4月25日（日）</span>
-            <span class="tag tag-cinnabar"><i data-lucide="compass" width="14" height="14" aria-hidden="true"></i> 上海浦東起訖・順時針大環線</span>
+<body class="antialiased selection:bg-mist selection:text-white">
+
+  <!-- =====================================================================
+       頂部主視覺區（HERO BANNER）：新中式水墨山嵐 × 精品旅遊雜誌封面
+       ===================================================================== -->
+  <header class="relative overflow-hidden border-b border-ink/10 bg-gradient-to-b from-[#EFECE4] via-[#F6F3EC] to-paper pt-8 pb-10 sm:pt-12 sm:pb-14">
+    <!-- 背景水墨遠山與雲嵐 SVG 插畫 -->
+    <div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <svg class="h-full w-full object-cover opacity-90" viewBox="0 0 1440 520" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <linearGradient id="inkMountain1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#1B2A2F" stop-opacity="0.16" />
+            <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0.0" />
+          </linearGradient>
+          <linearGradient id="inkMountain2" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#2D5A4C" stop-opacity="0.18" />
+            <stop offset="100%" stop-color="#FAF8F5" stop-opacity="0.02" />
+          </linearGradient>
+          <linearGradient id="goldSun" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#B8860B" stop-opacity="0.22" />
+            <stop offset="100%" stop-color="#B8860B" stop-opacity="0.02" />
+          </linearGradient>
+        </defs>
+
+        <!-- 旭日與淡淡金暈 -->
+        <circle cx="1140" cy="130" r="110" fill="url(#goldSun)" />
+        <circle cx="1140" cy="130" r="64" fill="none" stroke="#B8860B" stroke-opacity="0.18" stroke-width="1" stroke-dasharray="3 5" />
+
+        <!-- 遠景水墨層巒 -->
+        <path d="M-40,360 Q180,210 380,310 T790,260 T1180,210 T1500,320 L1500,520 L-40,520 Z" fill="url(#inkMountain1)" />
+        <!-- 中景山嵐翡翠峰巒 -->
+        <path class="animate-mist" d="M-60,410 Q210,270 460,360 T920,300 T1320,270 L1500,370 L1500,520 L-60,520 Z" fill="url(#inkMountain2)" />
+        <!-- 細膩水波紋線條 -->
+        <path d="M80,455 Q260,442 440,455 T800,455 T1160,455" fill="none" stroke="#2D5A4C" stroke-opacity="0.14" stroke-width="1.2" />
+        <path d="M220,475 Q410,464 600,475 T980,475 T1360,475" fill="none" stroke="#B8860B" stroke-opacity="0.16" stroke-width="1" />
+      </svg>
+    </div>
+
+    <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <!-- 頂部刊頭標記與傳統印章 -->
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span class="seal-stamp inline-flex items-center justify-center rounded px-2 py-1 font-serif text-xs font-bold tracking-widest">
+            雅集特輯
+          </span>
+          <span class="text-xs font-medium tracking-[0.2em] text-inkLight uppercase">
+            BAROQUE FRIENDS · EDITORIAL TRAVEL GUIDE
+          </span>
+        </div>
+
+        <!-- 行程日期徽章 -->
+        <div class="inline-flex items-center gap-2 rounded-full border border-bronze/40 bg-white/80 px-4 py-1.5 text-xs sm:text-sm font-medium text-ink shadow-sm backdrop-blur-sm">
+          <svg class="h-4 w-4 text-bronze" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>2027年4月17日（六）～ 4月25日（日）</span>
+          <span class="rounded-full bg-mist px-2 py-0.5 text-[11px] font-semibold text-white">共 9 天 8 夜</span>
+        </div>
+      </div>
+
+      <!-- 主標題與副標題 -->
+      <div class="max-w-4xl">
+        <p class="mb-2 font-serif text-base sm:text-lg font-semibold tracking-[0.18em] text-mist">
+          巴洛克之友 · 典藏人文山水行旅
+        </p>
+        <h1 class="font-serif text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight text-ink">
+          滬浙皖贛名山勝境、<br class="sm:hidden" />古鎮商都精彩九日遊
+        </h1>
+        <p class="mt-4 max-w-2xl text-sm sm:text-base md:text-lg leading-relaxed text-inkLight">
+          跨越<strong class="font-semibold text-ink">上海、浙江、安徽、江西</strong>四省市的順時針文化與自然大環線——從水墨丹青的黃山三清雲海，到小橋流水的千年古鎮，再見證從古徽商到義烏世界超市的時代脈動。
+        </p>
+      </div>
+
+      <!-- 關鍵亮點數據卡（4張精品指標卡） -->
+      <div class="mt-8 grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+        <!-- 卡片 1 -->
+        <div class="group rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-editorial backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-mist/40 hover:shadow-editorialHover">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium tracking-wider text-inkLight">壯闊地理跨度</span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-mistLight text-mist">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-2 font-serif text-xl font-bold text-ink">橫跨 4 省市</div>
+          <p class="mt-1 text-xs text-inkLight">滬・浙・皖・贛 順時針文化大環線</p>
+        </div>
+
+        <!-- 卡片 2 -->
+        <div class="group rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-editorial backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-mist/40 hover:shadow-editorialHover">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium tracking-wider text-inkLight">世界自然遺產</span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-mistLight text-mist">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l6-6 4 4 8-8M14 7h7v7" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-2 font-serif text-xl font-bold text-ink">登臨 2 大名山</div>
+          <p class="mt-1 text-xs text-inkLight">安徽黃山奇松雲海・江西三清山棧道</p>
+        </div>
+
+        <!-- 卡片 3 -->
+        <div class="group rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-editorial backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-bronze/40 hover:shadow-editorialHover">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium tracking-wider text-inkLight">千年江南文脈</span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-bronzeLight text-bronze">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-2 font-serif text-xl font-bold text-ink">5 大水鄉古城</div>
+          <p class="mt-1 text-xs text-inkLight">川沙・紹興・徽州・衢州・烏鎮巡禮</p>
+        </div>
+
+        <!-- 卡片 4 -->
+        <div class="group rounded-2xl border border-ink/10 bg-white/85 p-4 shadow-editorial backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-bronze/40 hover:shadow-editorialHover">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium tracking-wider text-inkLight">時代商業脈動</span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-bronzeLight text-bronze">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+              </svg>
+            </span>
+          </div>
+          <div class="mt-2 font-serif text-xl font-bold text-ink">古今商都巡禮</div>
+          <p class="mt-1 text-xs text-inkLight">上海外灘萬國建築・義烏世界超市</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       分頁導覽列（STICKY NAVIGATION TABS）
+       ===================================================================== -->
+  <nav id="sticky-nav" class="sticky top-0 z-40 border-b border-ink/10 bg-paper/95 backdrop-blur-md shadow-sm">
+    <div class="mx-auto max-w-6xl px-2 sm:px-6 lg:px-8">
+      <div class="no-scrollbar flex items-center justify-start sm:justify-center gap-1 sm:gap-3 overflow-x-auto py-2.5" role="tablist" aria-label="行程導覽分頁">
+        <button
+          type="button"
+          data-tab="itinerary"
+          class="nav-tab-btn active flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-ink text-white shadow-sm"
+          role="tab"
+          aria-selected="true"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+          </svg>
+          <span>每日詳細行程</span>
+        </button>
+
+        <button
+          type="button"
+          data-tab="culture"
+          class="nav-tab-btn flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-inkLight hover:bg-paperDark hover:text-ink transition-all duration-200"
+          role="tab"
+          aria-selected="false"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <span>人文主題與歷史脈絡</span>
+        </button>
+
+        <button
+          type="button"
+          data-tab="logistics"
+          class="nav-tab-btn flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-inkLight hover:bg-paperDark hover:text-ink transition-all duration-200"
+          role="tab"
+          aria-selected="false"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+          <span>航班與精選住宿</span>
+        </button>
+
+        <button
+          type="button"
+          data-tab="prep"
+          class="nav-tab-btn flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-inkLight hover:bg-paperDark hover:text-ink transition-all duration-200"
+          role="tab"
+          aria-selected="false"
+        >
+          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>高山健行與行前清單</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- =====================================================================
+       主要內容容器（MAIN CONTENT AREA）
+       ===================================================================== -->
+  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 sm:py-10">
+
+    <!-- ===================================================================
+         分頁一：每日詳細行程（ITINERARY TAB）
+         =================================================================== -->
+    <section id="panel-itinerary" class="tab-panel block">
+      <!-- 控制面板：瀏覽模式切換、主題篩選、天數快速跳轉 -->
+      <div class="mb-8 rounded-2xl border border-ink/10 bg-white p-4 sm:p-5 shadow-editorial">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <!-- 左側：主題標籤篩選 -->
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="mr-1 text-xs font-semibold tracking-wider text-inkLight">主題篩選：</span>
+            <button type="button" data-filter="all" class="filter-btn active rounded-full bg-mist px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition">
+              全部行程 (9)
+            </button>
+            <button type="button" data-filter="mountain" class="filter-btn rounded-full bg-paperDark px-3.5 py-1.5 text-xs font-medium text-inkLight hover:bg-mistLight hover:text-mist transition">
+              名山仙境
+            </button>
+            <button type="button" data-filter="watertown" class="filter-btn rounded-full bg-paperDark px-3.5 py-1.5 text-xs font-medium text-inkLight hover:bg-mistLight hover:text-mist transition">
+              水鄉古城
+            </button>
+            <button type="button" data-filter="commerce" class="filter-btn rounded-full bg-paperDark px-3.5 py-1.5 text-xs font-medium text-inkLight hover:bg-mistLight hover:text-mist transition">
+              商業都會
+            </button>
+            <button type="button" data-filter="bookmarked" class="filter-btn rounded-full bg-paperDark px-3.5 py-1.5 text-xs font-medium text-inkLight hover:bg-bronzeLight hover:text-bronze transition">
+              ★ 已收藏 (<span id="bookmark-count">0</span>)
+            </button>
+          </div>
+
+          <!-- 右側：全覽模式 / 單日焦點模式 切換 + 匯出筆記 -->
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex rounded-xl bg-paperDark p-1" role="group" aria-label="瀏覽模式切換">
+              <button type="button" id="btn-mode-all" class="mode-btn rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition">
+                全部展開
+              </button>
+              <button type="button" id="btn-mode-single" class="mode-btn rounded-lg px-3 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition">
+                單日焦點模式
+              </button>
+            </div>
+
+            <button type="button" id="btn-copy-notes" class="inline-flex items-center gap-1.5 rounded-xl border border-bronze/40 bg-bronzeLight/60 px-3 py-1.5 text-xs font-medium text-ink hover:bg-bronzeLight transition" title="複製所有已寫下的個人隨手筆記">
+              <svg class="h-3.5 w-3.5 text-bronze" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+              </svg>
+              <span>複製我的筆記</span>
+            </button>
           </div>
         </div>
-        <div class="seal-stamp" aria-hidden="true">巴洛克春旅</div>
+
+        <!-- 天數快速跳轉列（Day 1 ～ Day 9） -->
+        <div class="mt-4 border-t border-ink/10 pt-3.5">
+          <div class="no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-1">
+            <span class="mr-1 shrink-0 text-xs font-semibold text-inkLight">快速跳轉：</span>
+            <div id="day-jump-container" class="flex items-center gap-1.5">
+              <!-- 由 JS 動態生成 Day 1 ~ Day 9 按鈕 -->
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="kpi-grid">
-        <div class="washi-card">
-          <span class="label">旅程規模</span>
-          <span class="value">9 日 8 夜</span>
-          <span class="note">春季四月中旬最佳氣候</span>
+      <!-- 單日焦點模式導航列（僅在單日焦點模式顯示） -->
+      <div id="single-day-controls" class="mb-5 hidden items-center justify-between rounded-2xl border border-mist/25 bg-mistLight/70 px-4 py-3">
+        <button type="button" id="btn-prev-day" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs sm:text-sm font-medium text-ink shadow-sm hover:bg-paper transition disabled:opacity-40">
+          <span>← 上一天</span>
+        </button>
+        <div class="text-center">
+          <span id="single-day-indicator" class="font-serif text-sm sm:text-base font-bold text-mist">第 1 天 / 共 9 天</span>
         </div>
-        <div class="washi-card">
-          <span class="label">跨越疆域</span>
-          <span class="value">4 省市連遊</span>
-          <span class="note">上海・浙江・安徽・江西</span>
-        </div>
-        <div class="washi-card">
-          <span class="label">自然雙遺產</span>
-          <span class="value">黃山 × 三清山</span>
-          <span class="note">雙索道登頂與 5 小時高空棧道</span>
-        </div>
-        <div class="washi-card">
-          <span class="label">古今雙商都</span>
-          <span class="value">徽商 × 義烏</span>
-          <span class="note">明清牌坊群與全球小商品中心</span>
-        </div>
-      </div>
-    </header>
-
-    <!-- Section Jump Navigation -->
-    <nav class="section-nav" aria-label="行程章節快速導覽">
-      <a class="nav-link" href="#flights"><i data-lucide="plane" width="15" height="15" aria-hidden="true"></i> 航班安排</a>
-      <a class="nav-link" href="#itinerary-map"><i data-lucide="map" width="15" height="15" aria-hidden="true"></i> 九日路線地圖</a>
-      <a class="nav-link" href="#mountains"><i data-lucide="mountain" width="15" height="15" aria-hidden="true"></i> 名山勝境路線</a>
-      <a class="nav-link" href="#heritage"><i data-lucide="landmark" width="15" height="15" aria-hidden="true"></i> 古鎮與歷史文脈</a>
-      <a class="nav-link" href="#stays-food"><i data-lucide="utensils" width="15" height="15" aria-hidden="true"></i> 住宿與特色美食</a>
-      <a class="nav-link" href="#trip-notes"><i data-lucide="bookmark" width="15" height="15" aria-hidden="true"></i> 我的行程筆記</a>
-    </nav>
-
-    <!-- Section 1: Flights -->
-    <section class="section-block" id="flights">
-      <div class="section-header">
-        <span class="kicker">01 · FLIGHT OPTIONS</span>
-        <h2 class="section-title">桃園往返浦東：兩組直飛航班時刻安排</h2>
-        <p class="section-lede">團體行程提供中華航空與長榮航空兩種早去晚回方案，皆直飛上海浦東國際機場（PVG），落地後即由專車接往鄰近的川沙古鎮展開首日遊程。</p>
+        <button type="button" id="btn-next-day" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-3.5 py-2 text-xs sm:text-sm font-medium text-ink shadow-sm hover:bg-paper transition disabled:opacity-40">
+          <span>下一天 →</span>
+        </button>
       </div>
 
-      <div class="table-wrap">
-        <table class="kiln-table" id="flight-table">
-          <thead>
-            <tr>
-              <th>方案</th>
-              <th>航空公司</th>
-              <th>航段</th>
-              <th>航班代號</th>
-              <th>起飛時間</th>
-              <th>抵達時間</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr data-plan="A">
-              <td><strong>方案 A</strong></td>
-              <td>中華航空</td>
-              <td>去程：桃園（TPE）➔ 浦東（PVG）</td>
-              <td class="mono-num">CI 501</td>
-              <td class="mono-num">08:40</td>
-              <td class="mono-num">10:50</td>
-            </tr>
-            <tr data-plan="A">
-              <td><strong>方案 A</strong></td>
-              <td>中華航空</td>
-              <td>回程：浦東（PVG）➔ 桃園（TPE）</td>
-              <td class="mono-num">CI 504</td>
-              <td class="mono-num">19:50</td>
-              <td class="mono-num">21:50</td>
-            </tr>
-            <tr data-plan="B">
-              <td><strong>方案 B</strong></td>
-              <td>長榮航空</td>
-              <td>去程：桃園（TPE）➔ 浦東（PVG）</td>
-              <td class="mono-num">BR 712</td>
-              <td class="mono-num">09:55</td>
-              <td class="mono-num">12:05</td>
-            </tr>
-            <tr data-plan="B">
-              <td><strong>方案 B</strong></td>
-              <td>長榮航空</td>
-              <td>回程：浦東（PVG）➔ 桃園（TPE）</td>
-              <td class="mono-num">BR 721</td>
-              <td class="mono-num">20:05</td>
-              <td class="mono-num">22:00</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="flight-controls">
-        <div>
-          <span class="kicker">我的偏好航班紀錄</span>
-          <div id="flight-summary" style="margin-top: var(--space-xs); font-weight: 500;">目前顯示：方案 A（中華航空 CI 501 / CI 504），上午 10:50 抵達浦東，充裕展開首日川沙古鎮行程。</div>
-        </div>
-        <div class="btn-group">
-          <button type="button" class="btn is-active" id="btn-plan-A" onclick="selectFlightPlan('A')">選擇方案 A（中華航空）</button>
-          <button type="button" class="btn" id="btn-plan-B" onclick="selectFlightPlan('B')">選擇方案 B（長榮航空）</button>
-        </div>
+      <!-- 每日行程卡片列表容器 -->
+      <div id="itinerary-list" class="space-y-6">
+        <!-- 由 JS 渲染 9 天完整行程卡片 -->
       </div>
     </section>
 
-    <!-- Section 2: Sticky Scrollytelling Route Map + 9-Day Itinerary -->
-    <section class="section-block" id="itinerary-map">
-      <div class="section-header">
-        <span class="kicker">02 · DAILY CHRONICLE &amp; ROUTE MAP</span>
-        <h2 class="section-title">九日順時針大環線：隨行進路線逐步展開每日亮點</h2>
-        <p class="section-lede">左側地圖採用公開領域向量疆域底圖繪製滬浙皖贛真實地理座標。向下捲動右側每日行程，地圖將即時推進當日路段並標記核心景區；亦可點擊上方日數按鈕直接切換瀏覽。</p>
-      </div>
-
-      <div class="scrolly">
-        <figure class="scrolly-graphic">
-          <div class="map-frame">
-            <div class="map-topbar">
-              <span class="kicker" id="map-day-label">DAY 01 · 4/17</span>
-              <div class="map-day-pills" id="map-day-pills"></div>
-            </div>
-            <div id="route-map" role="region" aria-label="滬浙皖贛九日環線向量路線地圖"></div>
-            <div class="map-caption-bar">
-              <div class="map-caption-route" id="map-caption-route">第 1 天｜浦東機場 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘 ➔ 城隍廟</div>
-              <div class="map-caption-meta">
-                <span id="map-caption-region">省市：上海市</span>
-                <span id="map-caption-hotel">住宿：上海智選假日酒店</span>
-              </div>
-            </div>
-          </div>
-        </figure>
-
-        <div class="steps" id="steps"></div>
-      </div>
-    </section>
-
-    <!-- Section 3: Famous Mountains & Geological Wonders -->
-    <section class="section-block" id="mountains">
-      <div class="section-header">
-        <span class="kicker">03 · PEAKS &amp; CANYON WONDERS</span>
-        <h2 class="section-title">名山勝境徒步指南：黃山雙索道與三清山高空棧道</h2>
-        <p class="section-lede">旅程中段深入中國最負盛名的花崗岩峰林地貌。切換下方兩大山嶽路線圖，點選各個節點查看第 5 天黃山全景動線與第 6 天三清山 5 小時高空棧道環線細節。</p>
-      </div>
-
-      <div class="trail-tabs">
-        <button type="button" class="btn is-active" id="trail-tab-huangshan" onclick="switchTrail('huangshan')">第 5 天｜安徽黃山風景區動線</button>
-        <button type="button" class="btn" id="trail-tab-sanqingshan" onclick="switchTrail('sanqingshan')">第 6 天｜江西三清山 5 小時環線</button>
-      </div>
-
-      <div class="trail-panel">
-        <div class="trail-svg-box">
-          <svg class="trail-svg" id="trail-svg" viewBox="0 0 680 320" role="img" aria-label="名山登頂與棧道節點示意圖"></svg>
-        </div>
-        <div class="trail-detail">
+    <!-- ===================================================================
+         分頁二：人文主題與歷史脈絡（CULTURE & ROUTE MAP TAB）
+         =================================================================== -->
+    <section id="panel-culture" class="tab-panel hidden space-y-10">
+      <!-- 區塊 2A：視覺化順時針環線路線圖（SVG 互動路徑圖） -->
+      <div class="rounded-3xl border border-ink/10 bg-white p-5 sm:p-8 shadow-editorial">
+        <div class="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <span class="kicker" id="trail-kicker">DAY 05 · 安徽黃山</span>
-            <h3 class="section-title" id="trail-stop-name" style="font-size: 1.5rem; margin-top: var(--space-xs);">雲谷寺纜車站（索道上山）</h3>
+            <span class="inline-block rounded-full bg-mistLight px-3 py-1 text-xs font-semibold tracking-wider text-mist">GEOGRAPHIC LOOP</span>
+            <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">滬浙皖贛 · 順時針文化與自然大環線</h2>
+            <p class="mt-1 text-sm text-inkLight">點擊地圖上的任意城鎮或名山節點，檢視當日行程亮點與地理位置意涵。</p>
           </div>
-          <p id="trail-stop-desc" style="margin: 0; color: var(--on-surface-variant);"></p>
-          <div class="tag" id="trail-stop-tag" style="justify-self: start;"></div>
-          <div>
-            <div class="kicker" style="margin-bottom: var(--space-xs);">點擊節點切換解說</div>
-            <div class="trail-stop-list" id="trail-stop-list"></div>
+          <div class="flex items-center gap-4 text-xs text-inkLight">
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-mist"></span>名山勝境</span>
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-bronze"></span>水鄉古城</span>
+            <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rounded-full bg-ink"></span>商業都會</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
+          <!-- 左側互動 SVG 地圖（佔 7 欄） -->
+          <div class="lg:col-span-7 overflow-hidden rounded-2xl border border-ink/10 bg-[#F4F1EA] p-2 sm:p-4">
+            <svg id="route-map-svg" viewBox="0 0 800 520" class="h-auto w-full select-none" role="img" aria-label="滬浙皖贛順時針九日遊互動路線圖">
+              <defs>
+                <linearGradient id="seaGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#DCE7E4" stop-opacity="0.75" />
+                  <stop offset="100%" stop-color="#C6D8D4" stop-opacity="0.45" />
+                </linearGradient>
+                <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1B2A2F" flood-opacity="0.14" />
+                </filter>
+              </defs>
+
+              <!-- 東海與杭州灣海域背景 -->
+              <path d="M560,0 L800,0 L800,520 L520,520 Q560,400 610,330 Q660,260 570,220 Q520,195 620,175 Q685,155 645,105 Q610,60 560,0 Z" fill="url(#seaGrad)" />
+              <text x="695" y="95" font-family="Noto Serif TC" font-size="14" fill="#2D5A4C" opacity="0.55" letter-spacing="4">東海</text>
+              <text x="645" y="210" font-family="Noto Sans TC" font-size="11" fill="#2D5A4C" opacity="0.65">杭州灣</text>
+
+              <!-- 省界意象水墨分隔線 -->
+              <path d="M460,40 Q480,140 430,220 Q360,270 340,360 Q320,440 280,500" fill="none" stroke="#1B2A2F" stroke-opacity="0.12" stroke-width="1.5" stroke-dasharray="6 6" />
+              <path d="M340,360 Q230,365 130,390" fill="none" stroke="#1B2A2F" stroke-opacity="0.12" stroke-width="1.5" stroke-dasharray="6 6" />
+
+              <!-- 省份水墨浮水印標籤 -->
+              <text x="615" y="138" font-family="Noto Serif TC" font-size="18" font-weight="700" fill="#1B2A2F" opacity="0.16">上海市</text>
+              <text x="485" y="335" font-family="Noto Serif TC" font-size="24" font-weight="700" fill="#2D5A4C" opacity="0.15">浙江省</text>
+              <text x="235" y="215" font-family="Noto Serif TC" font-size="24" font-weight="700" fill="#B8860B" opacity="0.16">安徽省</text>
+              <text x="145" y="455" font-family="Noto Serif TC" font-size="24" font-weight="700" fill="#9E3B33" opacity="0.15">江西省</text>
+
+              <!-- 水墨山脈裝飾插畫（黃山 & 三清山） -->
+              <g opacity="0.22" fill="#2D5A4C">
+                <polygon points="240,295 268,252 296,295" />
+                <polygon points="265,295 292,262 318,295" />
+                <polygon points="155,395 182,352 208,395" />
+                <polygon points="180,395 204,364 228,395" />
+              </g>
+
+              <!-- 順時針環線主路徑（底軌 + 金色虛線航跡） -->
+              <path
+                d="M 638,142 
+                   L 612,132 
+                   Q 618,185 628,238 
+                   L 548,242 
+                   L 485,222 
+                   L 335,265 
+                   L 278,288 
+                   L 192,382 
+                   L 228,432 
+                   L 348,392 
+                   L 398,372 
+                   L 462,315 
+                   L 545,168 
+                   Z"
+                fill="none"
+                stroke="#B8860B"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-dasharray="7 6"
+                opacity="0.85"
+              />
+
+              <!-- 杭州灣跨海大橋弧線標示 -->
+              <path d="M 605,172 Q 625,198 628,232" fill="none" stroke="#2D5A4C" stroke-width="2.5" />
+
+              <!-- 節點容器（由 JS 動態填入可點擊節點，確保互動與狀態同步） -->
+              <g id="map-nodes-layer"></g>
+            </svg>
+          </div>
+
+          <!-- 右側節點詳情閱讀卡（佔 5 欄） -->
+          <div class="lg:col-span-5">
+            <div id="map-detail-card" class="rounded-2xl border border-bronze/30 bg-paper p-6 shadow-sm transition-all duration-300">
+              <!-- 由 JS 渲染當前選取節點資訊 -->
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="card-grid" style="margin-top: var(--space-xl);">
-        <div class="washi-card">
-          <span class="label">第 6 天夜宿 · 贛東北峽谷</span>
-          <span class="value" style="font-size: 1.45rem;">望仙谷懸崖夜景</span>
-          <p style="margin: 0; color: var(--on-surface-variant); font-size: 0.9375rem;">依山傍崖而建的傳統夯土民居與峽谷飛瀑相映，夜幕降臨後懸崖棧閣亮起金碧燈火，入住觀景渡假民宿享受仙俠般的山谷夜色與晨曦。</p>
-        </div>
-        <div class="washi-card">
-          <span class="label">第 7 天午後 · 地下奇觀</span>
-          <span class="value" style="font-size: 1.45rem;">浙江龍游石窟</span>
-          <p style="margin: 0; color: var(--on-surface-variant); font-size: 0.9375rem;">走入宏偉的地下人工石室群，近距離觀察岩壁上整齊斜紋鑿痕與支撐巨柱，探索這座至今仍保有開鑿年代與用途謎團的古代工程奇蹟。</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Section 4: Ancient Towns & Cultural History -->
-    <section class="section-block" id="heritage">
-      <div class="section-header">
-        <span class="kicker">04 · TOWNS, SCHOLARS &amp; COMMERCE</span>
-        <h2 class="section-title">古鎮風光與歷史文脈：水鄉、儒風、藏書樓與商都演變</h2>
-        <p class="section-lede">九日行程串起江南三大主軸——「水鄉古鎮」、「儒釋道文脈」與「古今商業脈動」。使用分類篩選，探索八大文化地標的深層故事。</p>
-      </div>
-
-      <div class="filter-bar" role="group" aria-label="文化主題篩選">
-        <button type="button" class="btn is-active" data-theme="all" onclick="filterHeritage('all', this)">全部地標（8）</button>
-        <button type="button" class="btn" data-theme="watertown" onclick="filterHeritage('watertown', this)">江南水鄉古鎮</button>
-        <button type="button" class="btn" data-theme="literati" onclick="filterHeritage('literati', this)">書香與信仰文脈</button>
-        <button type="button" class="btn" data-theme="commerce" onclick="filterHeritage('commerce', this)">古今商都脈動</button>
-      </div>
-
-      <div class="card-grid" id="heritage-grid"></div>
-
-      <div class="history-grid" style="margin-top: var(--space-xl);">
-        <article class="history-panel">
-          <span class="kicker">歷史脈絡 · 01</span>
-          <h3>衣冠南渡與南孔儒風（衢州 × 古徽州）</h3>
-          <p>北宋靖康之難後，孔子第 48 代嫡長孫孔端友負先祖楷木像南渡定居浙江衢州，使衢州成為「南孔聖地」。鄰近的皖南古徽州因群山環繞，自魏晉以來接納中原士族避戰南遷，完整保留宗法倫理、理學思想與精湛的木、石、磚「徽州三雕」。</p>
-        </article>
-        <article class="history-panel">
-          <span class="kicker">歷史脈絡 · 02</span>
-          <h3>藏書防火哲學與近代啟蒙（寧波 × 紹興）</h3>
-          <p>明嘉靖年間范欽於寧波建天一閣，取「天一生水，地六成之」五行以水克火之意守護典籍，成為中國現存最古私家藏書樓。這股浙東文風延續至清末民初，在紹興孕育出魯迅等思想啟蒙先驅，讓行程兼具古典保存與現代革新。</p>
-        </article>
-        <article class="history-panel">
-          <span class="kicker">歷史脈絡 · 03</span>
-          <h3>從十里洋場到世界超市（上海 × 義烏）</h3>
-          <p>外灘萬國建築博覽群記錄了 19 世紀開埠後東西方交匯的近代都會史；而第 8 天由尤正華好友游壽東先生導覽的義烏國際商貿城，則展現改革開放後民間從「雞毛換糖」起步、連結全球供應鏈的當代貿易傳奇。</p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Section 5: Accommodations & Culinary Guide -->
-    <section class="section-block" id="stays-food">
-      <div class="section-header">
-        <span class="kicker">05 · HOSPITALITY &amp; REGIONAL CUISINE</span>
-        <h2 class="section-title">九日精選住宿推薦與各地特色美食</h2>
-        <p class="section-lede">從國際品牌商旅、黃山南大門徽派飯店（連住兩晚）、望仙谷懸崖渡假民宿到衢州萬豪酒店，搭配沿途本幫菜、寧波海鮮、湯口暖胃火鍋與友人私房佳餚。</p>
-      </div>
-
-      <div class="filter-bar" role="group" aria-label="住宿與餐食檢視模式">
-        <button type="button" class="btn is-active" onclick="filterStayFood('all', this)">顯示每日完整宿餐</button>
-        <button type="button" class="btn" onclick="filterStayFood('stays', this)">聚焦精選住宿亮點</button>
-        <button type="button" class="btn" onclick="filterStayFood('food', this)">聚焦地方風味料理</button>
-      </div>
-
-      <div class="stay-food-grid" id="stay-food-grid"></div>
-    </section>
-
-    <!-- Section 6: Personal Trip Notes & Export -->
-    <section class="section-block" id="trip-notes" style="border-bottom: none;">
-      <div class="section-header">
-        <span class="kicker">06 · TRAVELER NOTEBOOK</span>
-        <h2 class="section-title">我的巴洛克九日行前筆記</h2>
-        <p class="section-lede">您在頁面中選擇的航班偏好與收藏的每日行程亮點會自動保存於筆記本狀態中，方便行前整理與匯出分享。</p>
-      </div>
-
-      <div class="notebook-panel">
-        <div style="display: grid; gap: var(--space-xs);">
-          <span class="kicker">已選方案與收藏摘要</span>
-          <div id="notebook-flight-line" style="font-weight: 500;">航班偏好：方案 A（中華航空 CI 501 / CI 504）</div>
-          <div id="notebook-bookmarks-line" style="color: var(--on-surface-variant);">尚未收藏特定天數亮點——您可於上方「九日順時針大環線」各日卡片點擊「收藏本日亮點」。</div>
+      <!-- 區塊 2B：行程的三大核心主題 -->
+      <div>
+        <div class="mb-6">
+          <span class="inline-block rounded-full bg-bronzeLight px-3 py-1 text-xs font-semibold tracking-wider text-bronze">CORE THEMES</span>
+          <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">行程的三大核心主題</h2>
+          <p class="mt-1 text-sm text-inkLight">山水美學、書香文脈與商業演變的三重交響曲</p>
         </div>
 
-        <div id="notebook-bookmarks-chips" style="display: flex; flex-wrap: wrap; gap: var(--space-xs);"></div>
-
-        <div class="notebook-actions">
-          <button type="button" class="btn btn-primary" onclick="exportTripNotes()">
-            <i data-lucide="download" width="15" height="15" aria-hidden="true"></i> 匯出我的行前筆記 (.txt)
-          </button>
-          <button type="button" class="btn" id="btn-reset-notes" onclick="resetTripNotes(this)">重設個人偏好</button>
-          <span class="status-msg" id="notebook-status" role="status" aria-live="polite"></span>
-        </div>
-      </div>
-    </section>
-
-    <footer class="site-footer">
-      <div>資料來源：巴洛克之友「滬浙皖贛名山勝境、古鎮商都精彩九日遊」行程規劃表、航班時刻與文化導覽彙整。</div>
-      <div>地圖邊界資料：Natural Earth（公開領域向量幾何，無使用外部磚圖伺服器）。</div>
-    </footer>
-  </div>
-
-  <api-shim></api-shim>
-
-  <script>
-    // ── Helper: read CSS custom properties so colors stay unified in :root ──
-    function cssVar(name) {
-      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    }
-
-    // ── Core Itinerary Data (all strings in backticks for defensive JS) ──
-    const DAYS = [
-      {
-        day: 1,
-        date: `4/17（六）`,
-        shortLabel: `D1`,
-        region: `上海市`,
-        title: `抵達上海 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘風華 ➔ 城隍廟商圈`,
-        routeLabel: `第 1 天｜浦東機場 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘 ➔ 城隍廟`,
-        summary: `班機抵達上海浦東國際機場後專車接機。首站前往距離機場僅約 15–20 分鐘車程的川沙古鎮，漫步護城河畔感受老上海水鄉古韻；午後前往南京西路步行街體驗繁華都會氣象，傍晚漫步外灘欣賞萬國建築博覽群與黃浦江兩岸天際線，晚間於上海城隍廟商圈自由品嚐道地小吃。`,
-        highlight: `外灘面臨黃浦江，隔江遠眺陸家嘴摩天大樓，是領略上海近現代百年風雲與璀璨夜色的核心地標。川沙古鎮則保留明代古城牆遺址與黃炎培、宋慶齡家族人文底蘊。`,
-        meals: { b: `機上輕食`, l: `川沙古鎮風味餐`, d: `上海城隍廟商圈（配合逛街自理餐）` },
-        hotel: `上海智選假日酒店`,
-        hotelNote: `浦東接機首日休憩，鄰近交通動線`,
-        center: [31.20, 121.62],
-        zoom: 6,
-        stops: [
-          { name: `上海浦東國際機場`, lat: 31.1443, lng: 121.8083, note: `專車接機啟程` },
-          { name: `川沙古鎮`, lat: 31.1920, lng: 121.6980, note: `護城河畔老上海水鄉與午餐` },
-          { name: `外灘・南京西路・城隍廟`, lat: 31.2397, lng: 121.4905, note: `萬國建築博覽群與黃浦江夜景` }
-        ]
-      },
-      {
-        day: 2,
-        date: `4/18（日）`,
-        shortLabel: `D2`,
-        region: `浙江省（寧波・紹興）`,
-        title: `杭州灣跨海大橋 ➔ 寧波天一閣博物館與月湖 ➔ 紹興水鄉`,
-        routeLabel: `第 2 天｜上海 ➔ 杭州灣跨海大橋 ➔ 寧波天一閣 ➔ 紹興`,
-        summary: `晨間專車南下，車觀跨越杭州灣海面的杭州灣跨海大橋壯麗海景，抵達甬城寧波。午後探訪中國現存歷史最悠久的私家藏書樓天一閣與月湖公園，隨後驅車前往文風鼎盛的水鄉紹興。`,
-        highlight: `天一閣建於明代嘉靖年間（寧波海曙區天一街 10 號），園林與水池環繞書樓，是江南極具代表性的私家藏書樓建築群與古典園林典範。`,
-        meals: { b: `飯店內`, l: `寧波海鮮風味料理`, d: `紹興當地特色餐` },
-        hotel: `紹興袍江智選假日酒店`,
-        hotelNote: `紹興水鄉之旅舒適下榻`,
-        center: [30.18, 121.10],
-        zoom: 6,
-        stops: [
-          { name: `杭州灣跨海大橋`, lat: 30.4530, lng: 121.1320, note: `車觀跨越杭州灣海面壯麗海景` },
-          { name: `寧波天一閣與月湖`, lat: 29.8725, lng: 121.5356, note: `明代私家藏書樓與古典園林` },
-          { name: `紹興水鄉`, lat: 30.0024, lng: 120.5820, note: `文風鼎盛的江南古城` }
-        ]
-      },
-      {
-        day: 3,
-        date: `4/19（一）`,
-        shortLabel: `D3`,
-        region: `浙江省（紹興・杭州）`,
-        title: `紹興市區精華巡禮 ➔ 西湖漫步 ➔ 靈隱古剎祈福`,
-        routeLabel: `第 3 天｜紹興魯迅故里 ➔ 杭州西湖蘇堤 ➔ 飛來峰靈隱寺`,
-        summary: `上午在紹興市區參觀著名的歷史文化街區魯迅故里，感受文人墨客的故居墨香與水鄉烏篷船韻味。午後驅車抵達杭州，漫步西湖蘇堤與花港觀魚，隨後走入西湖群山之間的飛來峰靈隱禪寺參拜。`,
-        highlight: `魯迅故里完整保存了魯迅童年生活的三味書屋與百草園，是深入探索紹興傳統台門建築與水鄉歷史的首選景點。`,
-        meals: { b: `飯店內`, l: `杭州著名麵食館`, d: `杭州特色宴` },
-        hotel: `杭州東站智選假日酒店`,
-        hotelNote: `杭州都會樞紐便利住宿`,
-        center: [30.15, 120.32],
-        zoom: 6,
-        stops: [
-          { name: `紹興魯迅故里`, lat: 29.9942, lng: 120.5835, note: `三味書屋、百草園與烏篷船` },
-          { name: `杭州西湖蘇堤・花港觀魚`, lat: 30.2420, lng: 120.1360, note: `湖光山色漫步` },
-          { name: `飛來峰靈隱禪寺`, lat: 30.2408, lng: 120.1014, note: `千年古剎參拜祈福` }
-        ]
-      },
-      {
-        day: 4,
-        date: `4/20（二）`,
-        shortLabel: `D4`,
-        region: `浙江杭州 ➔ 安徽古徽州`,
-        title: `杭州西溪濕地 ➔ 歙縣棠樾牌坊群 ➔ 徽州古城 ➔ 湯口鎮`,
-        routeLabel: `第 4 天｜西溪濕地 ➔ 棠樾牌坊群 ➔ 徽州古城 ➔ 湯口鎮`,
-        summary: `早晨前往西溪國家濕地公園搭乘搖櫓船穿越蘆葦水道；午後驅車西行跨入皖南古徽州，參觀歙縣著名的棠樾牌坊群與鮑家花園，探訪徽州古城（徽州府衙、許國石坊）並細賞木雕、石雕、磚雕之「徽州三雕」工藝。傍晚抵達黃山南大門湯口鎮。`,
-        highlight: `湯口鎮為黃山南大門必經門戶，下榻鎮中心白牆黛瓦現代徽派風格飯店並享用暖胃火鍋，為翌日登山儲備體力。`,
-        meals: { b: `飯店內`, l: `沿途著名地方料理`, d: `湯口鎮暖胃火鍋` },
-        hotel: `黃山景區湯口鎮藝龍萬國飯店`,
-        hotelNote: `連住兩晚・緊鄰黃山南大門換乘中心`,
-        center: [30.02, 119.05],
-        zoom: 6,
-        stops: [
-          { name: `西溪國家濕地公園`, lat: 30.2660, lng: 120.0650, note: `搭乘搖櫓船穿越蘆葦水道` },
-          { name: `歙縣棠樾牌坊群・鮑家花園`, lat: 29.8825, lng: 118.3945, note: `徽商宗族牌坊與園林` },
-          { name: `徽州古城`, lat: 29.8675, lng: 118.4310, note: `徽州府衙、許國石坊與徽州三雕` },
-          { name: `黃山湯口鎮`, lat: 30.0750, lng: 118.1740, note: `黃山南大門・藝龍萬國飯店連住兩晚` }
-        ]
-      },
-      {
-        day: 5,
-        date: `4/21（三）`,
-        shortLabel: `D5`,
-        region: `安徽省（黃山風景區）`,
-        title: `黃山全日奇景探訪（始信峰、北海、光明頂、鰲魚峰、玉屏樓迎客松）`,
-        routeLabel: `第 5 天｜湯口換乘 ➔ 雲谷索道 ➔ 始信峰・光明頂・迎客松 ➔ 玉屏索道`,
-        summary: `全日深入登臨黃山風景區。清晨於湯口換乘景區觀光車至雲谷寺纜車站，搭乘雲谷索道上山，漫步遊覽始信峰、北海景區遠眺猴子觀海；隨後翻越光明頂遠眺天海，經鰲魚峰、穿百步雲梯，抵達玉屏樓仰望千年迎客松。最後搭乘玉屏索道下山至慈光閣，搭環保車返回湯口鎮。`,
-        highlight: `黃山風景區以奇松、怪石、雲海、溫泉「四絕」名冠天下，春季登頂常能欣賞到壯闊雲海與千姿百態的奇峰絕壁。`,
-        meals: { b: `飯店內`, l: `黃山景區高山觀景餐廳`, d: `徽州道地料理` },
-        hotel: `黃山景區湯口鎮藝龍萬國飯店（續住）`,
-        hotelNote: `免換飯店，下山即可安心休息`,
-        center: [30.12, 118.17],
-        zoom: 6,
-        stops: [
-          { name: `黃山風景區（雲谷索道—始信峰—光明頂—玉屏樓）`, lat: 30.1333, lng: 118.1667, note: `奇松、怪石、雲海全日精華縱走` }
-        ]
-      },
-      {
-        day: 6,
-        date: `4/22（四）`,
-        shortLabel: `D6`,
-        region: `江西省（上饒）`,
-        title: `黃山出發 ➔ 江西道教仙山「三清山」（5小時精華環線）➔ 崖壁仙宿「望仙谷」`,
-        routeLabel: `第 6 天｜湯口 ➔ 江西三清山高空棧道 ➔ 望仙谷夜景`,
-        summary: `早餐後啟程前往江西上饒的世界自然遺產三清山，安排經典 5 小時懸崖高空棧道徒步環線：由金沙索道上山，串連「南清園景區」欣賞神龍戲松、巨蟒出山、東方女神，接續走「陽光海岸高空棧道」與「西海岸高空棧道」，俯瞰萬丈深谷與奇石奇松後索道下山。傍晚抵達望仙谷風景區入住觀景民宿，欣賞懸樓點燈夜景。`,
-        highlight: `三清山被譽為西太平洋邊緣最美麗的花崗岩地貌；望仙谷依山傍崖而建，將贛東北夯土民居與峽谷水系結合，夜幕點燈後宛如真實版仙俠世界。`,
-        meals: { b: `飯店內`, l: `三清山當地土雞農家菜`, d: `望仙谷贛東特色農家風味` },
-        hotel: `望仙谷觀景渡假民宿`,
-        hotelNote: `夜宿峽谷景區內，盡覽點燈奇幻夜景`,
-        center: [28.76, 118.00],
-        zoom: 6,
-        stops: [
-          { name: `三清山風景區`, lat: 28.9120, lng: 118.0650, note: `5 小時懸崖高空棧道環線` },
-          { name: `望仙谷風景區`, lat: 28.5980, lng: 117.9150, note: `懸崖棧閣夜景與觀景渡假民宿` }
-        ]
-      },
-      {
-        day: 7,
-        date: `4/23（五）`,
-        shortLabel: `D7`,
-        region: `浙江省（衢州・龍游）`,
-        title: `望仙谷晨曦 ➔ 衢州古城（水亭門） ➔ 龍游石窟`,
-        routeLabel: `第 7 天｜望仙谷晨曦 ➔ 衢州水亭門古城 ➔ 龍游石窟`,
-        summary: `清晨在望仙谷幽靜峽谷中醒來，隨後專車開往浙江「南孔聖地」衢州。參觀衢州古城（水亭門歷史文化街區、古城牆），感受儒風流芳的江南古城氛圍；午後專車前往探訪被譽為「地下奇觀」的龍游石窟，深入地下石室群，探索千古未解的宏偉人工石窟與雕刻謎團。`,
-        highlight: `南孔聖地衢州傳承靖康南渡後的江南儒學文脈；龍游石窟則以宏偉地下人工鑿刻石室名列世界建築考古之謎。`,
-        meals: { b: `民宿或酒店內`, l: `由錡錡特別安排之在地精選料理`, d: `衢州當地特色餐廳` },
-        hotel: `衢州萬豪酒店`,
-        hotelNote: `國際五星品牌舒適禮遇`,
-        center: [28.98, 118.95],
-        zoom: 6,
-        stops: [
-          { name: `衢州古城・水亭門`, lat: 28.9635, lng: 118.8670, note: `南孔聖地儒風古城牆` },
-          { name: `龍游石窟`, lat: 29.0600, lng: 119.1850, note: `探索地下千古未解石室奇觀` }
-        ]
-      },
-      {
-        day: 8,
-        date: `4/24（六）`,
-        shortLabel: `D8`,
-        region: `浙江省（金華義烏）`,
-        title: `義烏全球小商品商貿城深度參訪`,
-        routeLabel: `第 8 天｜衢州 ➔ 義烏國際商貿城（一至五區深度導覽）`,
-        summary: `早餐後前往全球知名的小商品之都——義烏。由尤正華當地好友游壽東先生帶領導覽，深度參訪義烏國際商貿城（一至五區各類工藝品、飾品、日用品及新創外貿展館），親身感受「世界超市」的蓬勃貿易生機。`,
-        highlight: `專人帶路走訪國際商貿城一至五區，看見改革開放後從草根貿易躍升為全球日用商品集散樞紐的經濟奇蹟。`,
-        meals: { b: `酒店內`, l: `配合逛商場自理餐`, d: `游壽東好友熱情安排之在地佳餚` },
-        hotel: `義烏金豪東方酒店`,
-        hotelNote: `鄰近義烏商貿核心圈`,
-        center: [29.31, 120.09],
-        zoom: 6,
-        stops: [
-          { name: `義烏國際商貿城`, lat: 29.3150, lng: 120.0950, note: `一至五區工藝品、飾品與外貿展館深度導覽` }
-        ]
-      },
-      {
-        day: 9,
-        date: `4/25（日）`,
-        shortLabel: `D9`,
-        region: `浙江嘉興 ➔ 上海浦東返台`,
-        title: `義烏出發 ➔ 烏鎮水鄉巡禮 ➔ 浦東國際機場返台`,
-        routeLabel: `第 9 天｜義烏 ➔ 嘉興烏鎮水鄉 ➔ 上海浦東機場賦歸`,
-        summary: `清晨由義烏出發經嘉興地區前往江南水鄉代表烏鎮，漫步於青石板路上，參觀古色古香的木造水閣、傳統染坊與古橋倒影，感受「小橋、流水、人家」的水鄉意境。午後享用古鎮道地風味餐後，專車平穩駛向上海浦東國際機場辦理登機手續，搭機返回桃園機場，結束九日精彩旅程。`,
-        highlight: `烏鎮景區位於浙江嘉興桐鄉市，名列江南六大古鎮之一，擁有千年水鄉歷史，完整的晚清與民國水鄉古建築風貌保存完好。`,
-        meals: { b: `酒店內`, l: `烏鎮水鄉風味餐`, d: `機上精緻簡餐` },
-        hotel: `溫暖的家`,
-        hotelNote: `晚間返抵桃園國際機場`,
-        center: [30.85, 121.15],
-        zoom: 6,
-        stops: [
-          { name: `嘉興烏鎮風景區`, lat: 30.7460, lng: 120.4860, note: `青石板路、傳統染坊與木造水閣` },
-          { name: `上海浦東國際機場`, lat: 31.1443, lng: 121.8083, note: `完成順時針大環線・搭機返台` }
-        ]
-      }
-    ];
-
-    const TRAILS = {
-      huangshan: {
-        kicker: `DAY 05 · 安徽黃山全日縱走`,
-        stops: [
-          { name: `湯口換乘・雲谷索道`, x: 70, y: 255, tag: `後山入山起點`, desc: `清晨由湯口鎮換乘景區環保觀光車至雲谷寺纜車站，搭乘雲谷索道直達山巔，輕鬆避開陡峭徒步路段。` },
-          { name: `始信峰`, x: 185, y: 165, tag: `奇松薈萃`, desc: `「不到始信峰，不見黃山松。」此處匯聚黑虎松、連理松、龍爪松等經典黃山奇松與懸崖松影。` },
-          { name: `北海景區（猴子觀海）`, x: 295, y: 140, tag: `怪石雲海`, desc: `黃山腹地開闊景區，可遠眺「猴子觀海」巧石與獅子峰一帶春季翻騰的雲海奇觀。` },
-          { name: `光明頂`, x: 405, y: 85, tag: `全山中心制高點`, desc: `黃山第二高峰，地勢開闊平坦，南眺天海與蓮花、天都諸峰，是飽覽群峰雲海的經典視角。` },
-          { name: `鰲魚峰・百步雲梯`, x: 505, y: 150, tag: `險峻岩道`, desc: `經形似巨鯨躍波的鰲魚峰，穿行依絕壁鑿出的「百步雲梯」石階，體驗黃山奇石地勢的驚險與精巧。` },
-          { name: `玉屏樓迎客松・索道下山`, x: 605, y: 235, tag: `前山經典終點`, desc: `抵達玉屏樓仰望佇立懸崖的千年「迎客松」，隨後搭乘玉屏索道下山至慈光閣，乘環保車返回湯口鎮。` }
-        ]
-      },
-      sanqingshan: {
-        kicker: `DAY 06 · 江西三清山 5 小時高空棧道環線`,
-        stops: [
-          { name: `金沙索道上山`, x: 85, y: 255, tag: `東線入口`, desc: `早餐後由黃山湯口前往江西上饒三清山，搭乘金沙索道快速攀升進入花崗岩峰林核心海拔。` },
-          { name: `南清園景區`, x: 215, y: 155, tag: `三大奇石地標`, desc: `環線最密集的花崗岩象形石群，近距離欣賞「神龍戲松」、「巨蟒出山」與「東方女神」三大代表奇景。` },
-          { name: `陽光海岸高空棧道`, x: 355, y: 95, tag: `東部懸崖平緩棧道`, desc: `修築於千米絕壁腰間的高空棧道，視野開闊且路面平緩，將三清山東部群峰與深谷盡收眼底。` },
-          { name: `西海岸高空棧道`, x: 495, y: 120, tag: `萬丈深谷縱覽`, desc: `沿西側絕壁蜿蜒的高空棧道，宛如雲端走廊，俯瞰幽深峽谷、奇松與變幻莫測的山嵐雲霧。` },
-          { name: `索道下山 ➔ 望仙谷`, x: 605, y: 245, tag: `接續峽谷夜宿`, desc: `完成約 5 小時精華環線後搭索道下山，傍晚前往望仙谷入住觀景民宿，靜待懸崖懸樓點亮金碧燈火。` }
-        ]
-      }
-    };
-
-    const HERITAGE_ITEMS = [
-      {
-        theme: `watertown`,
-        tag: `江南水鄉古鎮 · 第 1 天`,
-        title: `川沙古鎮（上海浦東）`,
-        desc: `距離浦東機場僅約 15–20 分鐘車程，保留明代防倭古城牆遺址與護城河格局，亦是黃炎培與宋慶齡家族故居所在，展現老上海寧靜水鄉韻味與本幫菜風味。`
-      },
-      {
-        theme: `literati`,
-        tag: `書香藏書樓 · 第 2 天`,
-        title: `寧波天一閣與月湖`,
-        desc: `明代嘉靖年間兵部右侍郎范欽所建，以「天一生水，地六成之」哲學祈求防火護書，是中國現存歷史最悠久的私家藏書樓與古典園林典範。`
-      },
-      {
-        theme: `literati`,
-        tag: `近代啟蒙 · 第 3 天`,
-        title: `紹興魯迅故里`,
-        desc: `完整保存三味書屋、百草園與紹興傳統台門建築群，伴隨街巷間悠緩的烏篷船影，從古典浙東文脈一路串聯至清末民初的思想啟蒙。`
-      },
-      {
-        theme: `watertown`,
-        tag: `湖山禪寺 · 第 3–4 天`,
-        title: `杭州西湖、靈隱寺與西溪濕地`,
-        desc: `漫步西湖蘇堤與花港觀魚，參拜西湖群山間的飛來峰靈隱禪寺；翌日早晨於西溪國家濕地公園搭乘搖櫓船穿越蘆葦水道。`
-      },
-      {
-        theme: `commerce`,
-        tag: `明清徽商 · 第 4 天`,
-        title: `歙縣棠樾牌坊群與徽州古城`,
-        desc: `七座忠孝節義石牌坊與鮑家花園見證稱雄商界數百年的徽商榮耀；徽州古城府衙、許國石坊則濃縮木雕、石雕、磚雕「徽州三雕」工藝精華。`
-      },
-      {
-        theme: `literati`,
-        tag: `南孔聖地 · 第 7 天`,
-        title: `衢州古城水亭門`,
-        desc: `北宋靖康南渡後孔氏宗子定居於此，使衢州成為江南儒學重鎮。漫步水亭門歷史文化街區與古城牆，感受儒風流芳的古城氛圍。`
-      },
-      {
-        theme: `commerce`,
-        tag: `當代世界超市 · 第 8 天`,
-        title: `義烏國際商貿城`,
-        desc: `由當地好友游壽東先生導覽一至五區工藝品、飾品、日用品及新創外貿展館，體驗從改革開放「雞毛換糖」走向全球供應鏈樞紐的商業脈動。`
-      },
-      {
-        theme: `watertown`,
-        tag: `江南六大古鎮 · 第 9 天`,
-        title: `嘉興烏鎮風景區`,
-        desc: `壓軸走進嘉興桐鄉的千年水鄉烏鎮，漫步青石板路，欣賞保存完好的晚清民國木造水閣、傳統染坊與古橋倒影，體驗小橋流水人家的慢活終章。`
-      }
-    ];
-
-    // ── State (persisted via notebookAppApi) ──
-    const appState = {
-      flightPlan: `A`,
-      bookmarks: [],
-      activeTrail: `huangshan`,
-      activeTrailStop: 0
-    };
-
-    let map = null;
-    let routeFullLayer = null;
-    let routeActiveLayer = null;
-    let markerLayerGroup = null;
-    let currentDayIdx = 0;
-
-    async function saveState() {
-      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
-        try {
-          await window.notebookAppApi.setAppState({
-            flightPlan: appState.flightPlan,
-            bookmarks: appState.bookmarks
-          });
-        } catch (e) {
-          // Graceful no-op outside host
-        }
-      }
-    }
-
-    // ── Section 1: Flight selector ──
-    function selectFlightPlan(plan) {
-      appState.flightPlan = plan;
-      const btnA = document.getElementById(`btn-plan-A`);
-      const btnB = document.getElementById(`btn-plan-B`);
-      const summary = document.getElementById(`flight-summary`);
-      const rows = document.querySelectorAll(`#flight-table tbody tr`);
-
-      if (btnA) btnA.classList.toggle(`is-active`, plan === `A`);
-      if (btnB) btnB.classList.toggle(`is-active`, plan === `B`);
-      rows.forEach(tr => {
-        tr.classList.toggle(`is-selected-row`, tr.dataset.plan === plan);
-      });
-
-      if (summary) {
-        summary.textContent = plan === `A`
-          ? `目前選擇：方案 A（中華航空 CI 501 / CI 504）—— 08:40 桃園起飛、10:50 抵達浦東，19:50 回程返台。`
-          : `目前選擇：方案 B（長榮航空 BR 712 / BR 721）—— 09:55 桃園起飛、12:05 抵達浦東，20:05 回程返台。`;
-      }
-      updateNotebookView();
-      saveState();
-    }
-
-    // ── Section 2: Build Scrollytelling Steps & Leaflet Vector Map ──
-    function buildSteps() {
-      const stepsEl = document.getElementById(`steps`);
-      const pillsEl = document.getElementById(`map-day-pills`);
-      if (!stepsEl || !pillsEl) return;
-
-      stepsEl.innerHTML = ``;
-      pillsEl.innerHTML = ``;
-
-      DAYS.forEach((d, idx) => {
-        const isSaved = appState.bookmarks.includes(d.day);
-        pillsEl.insertAdjacentHTML(`beforeend`,
-          `<button type="button" class="day-pill ${idx === 0 ? `is-active` : ``}" data-day-pill="${idx}" onclick="jumpToDay(${idx})">${d.shortLabel}</button>`
-        );
-
-        const highlightHtml = d.highlight
-          ? `<div class="highlight-note"><strong>景點亮點：</strong>${d.highlight}</div>`
-          : ``;
-
-        stepsEl.insertAdjacentHTML(`beforeend`,
-          `<article class="step ${idx === 0 ? `is-active` : ``}" data-step="${idx}" id="day-${d.day}">
-            <div class="step-card">
-              <div class="step-head">
-                <div>
-                  <span class="step-idx">DAY 0${d.day} · ${d.date} · ${d.region}</span>
-                  <h3 class="step-title">第 ${d.day} 天：${d.title}</h3>
-                </div>
-                <button type="button" class="btn btn-subtle ${isSaved ? `is-saved` : ``}" data-bookmark-day="${d.day}" onclick="toggleBookmark(${d.day})">
-                  ${isSaved ? `已收藏` : `收藏亮點`}
-                </button>
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <!-- 主題 1 -->
+          <article class="flex flex-col justify-between rounded-2xl border border-ink/10 bg-white p-6 shadow-editorial">
+            <div>
+              <div class="mb-4 flex items-center justify-between">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-mistLight text-mist">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 17l5-7 4 5 3-4 4 6H4z" />
+                  </svg>
+                </span>
+                <span class="font-serif text-xs font-bold tracking-widest text-mist">壹 · 山水美學</span>
               </div>
-              <p class="step-body">${d.summary}</p>
-              ${highlightHtml}
-              <div class="step-logistics">
-                <div class="logistics-row"><span class="logistics-key">餐食</span><span>早／${d.meals.b} ｜ 午／${d.meals.l} ｜ 晚／${d.meals.d}</span></div>
-                <div class="logistics-row"><span class="logistics-key">住宿</span><span><strong>${d.hotel}</strong>（${d.hotelNote}）</span></div>
+              <h3 class="font-serif text-xl font-bold text-ink">名山仙境與自然地貌</h3>
+              <p class="mt-1 text-xs font-medium text-bronze">天人合一的山水美學</p>
+              <div class="mt-4 space-y-3 text-sm leading-relaxed text-inkLight">
+                <p>
+                  <strong class="text-ink">黃山與三清山：</strong>登臨天下第一奇山「黃山」（奇松、怪石、雲海、溫泉）與江西道教仙山「三清山」（花崗岩峰林與高空棧道）。這兩座世界遺產不僅代表頂級地質景觀，更承載中國傳統山水畫意境與道教「仙道文化」的精神追求。
+                </p>
+                <p>
+                  <strong class="text-ink">望仙谷與龍游石窟：</strong>從懸崖絕壁上的贛東北傳統夯土民居「望仙谷」，到千古未解的地下人工建築奇觀「龍游石窟」，展現人類順應自然、甚至改造自然的驚人智慧與奇幻美學。
+                </p>
               </div>
             </div>
-          </article>`
-        );
-      });
-    }
-
-    function initMap() {
-      const mapEl = document.getElementById(`route-map`);
-      if (!mapEl || typeof L === `undefined`) return;
-
-      map = L.map(`route-map`, {
-        center: [30.15, 119.8],
-        zoom: 6,
-        maxZoom: 6,
-        minZoom: 5,
-        scrollWheelZoom: false,
-        attributionControl: true
-      });
-      map.attributionControl.setPrefix(false);
-      map.attributionControl.addAttribution(`Boundaries: Natural Earth (public domain)`);
-
-      const landColor = cssVar(`--map-land`);
-      const borderColor = cssVar(`--map-land-border`);
-      const contextLine = cssVar(`--data-context`);
-      const mossColor = cssVar(`--secondary`);
-
-      // Add subtle graticule/province reference labels (derived strictly from itinerary regions)
-      const regionLabels = [
-        { name: `上海`, lat: 31.32, lng: 121.38 },
-        { name: `浙江`, lat: 29.48, lng: 120.75 },
-        { name: `安徽`, lat: 30.28, lng: 118.25 },
-        { name: `江西`, lat: 28.72, lng: 117.70 }
-      ];
-      regionLabels.forEach(r => {
-        L.marker([r.lat, r.lng], {
-          interactive: false,
-          icon: L.divIcon({
-            className: `region-label-icon`,
-            html: `<span style="font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; color: var(--on-surface-variant); opacity: 0.72; white-space: nowrap;">${r.name}</span>`,
-            iconSize: [40, 16]
-          })
-        }).addTo(map);
-      });
-
-      // Full clockwise loop polyline (all stops in order)
-      const allCoords = [];
-      DAYS.forEach(d => {
-        d.stops.forEach(s => allCoords.push([s.lat, s.lng]));
-      });
-      routeFullLayer = L.polyline(allCoords, {
-        color: mossColor,
-        weight: 2,
-        opacity: 0.45,
-        dashArray: `5 5`
-      }).addTo(map);
-
-      markerLayerGroup = L.layerGroup().addTo(map);
-
-      // Load Natural Earth 50m coastline & national boundaries
-      fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json`)
-        .then(r => r.json())
-        .then(topo => {
-          if (typeof topojson === `undefined`) return;
-          const geo = topojson.feature(topo, topo.objects.countries);
-          const geoLayer = L.geoJSON(geo, {
-            style: {
-              fillColor: landColor,
-              fillOpacity: 1,
-              color: borderColor,
-              weight: 0.9
-            }
-          }).addTo(map);
-          geoLayer.bringToBack();
-          map.invalidateSize();
-        })
-        .catch(() => {
-          // Keeps route stops legible even if network fetch fails
-        });
-
-      renderMapForDay(0);
-    }
-
-    function renderMapForDay(idx) {
-      currentDayIdx = idx;
-      const d = DAYS[idx];
-      if (!d) return;
-
-      const labelEl = document.getElementById(`map-day-label`);
-      const routeEl = document.getElementById(`map-caption-route`);
-      const regionEl = document.getElementById(`map-caption-region`);
-      const hotelEl = document.getElementById(`map-caption-hotel`);
-
-      if (labelEl) labelEl.textContent = `DAY 0${d.day} · ${d.date}`;
-      if (routeEl) routeEl.textContent = d.routeLabel;
-      if (regionEl) regionEl.textContent = `區域：${d.region}`;
-      if (hotelEl) hotelEl.textContent = `住宿：${d.hotel}`;
-
-      document.querySelectorAll(`.day-pill`).forEach(p => {
-        p.classList.toggle(`is-active`, Number(p.dataset.dayPill) === idx);
-      });
-
-      if (!map || !markerLayerGroup) return;
-
-      markerLayerGroup.clearLayers();
-      if (routeActiveLayer) {
-        map.removeLayer(routeActiveLayer);
-        routeActiveLayer = null;
-      }
-
-      const cinnabar = cssVar(`--tertiary`);
-      const sumi = cssVar(`--on-surface`);
-      const washi = cssVar(`--surface-container-low`);
-      const moss = cssVar(`--secondary`);
-
-      // Draw previous days subtle nodes
-      DAYS.forEach((other, oIdx) => {
-        if (oIdx === idx) return;
-        other.stops.forEach(s => {
-          L.circleMarker([s.lat, s.lng], {
-            radius: 3.5,
-            color: oIdx < idx ? moss : sumi,
-            fillColor: washi,
-            fillOpacity: 0.85,
-            weight: 1.2,
-            opacity: oIdx < idx ? 0.85 : 0.4
-          }).bindTooltip(`第 ${other.day} 天：${s.name}`).addTo(markerLayerGroup);
-        });
-      });
-
-      // Active day segment (connect from previous day's last stop for continuity)
-      const activeCoords = [];
-      if (idx > 0) {
-        const prevStops = DAYS[idx - 1].stops;
-        const prevLast = prevStops[prevStops.length - 1];
-        activeCoords.push([prevLast.lat, prevLast.lng]);
-      }
-      d.stops.forEach(s => activeCoords.push([s.lat, s.lng]));
-
-      if (activeCoords.length >= 2) {
-        routeActiveLayer = L.polyline(activeCoords, {
-          color: cinnabar,
-          weight: 3.5,
-          opacity: 0.95
-        }).addTo(map);
-      }
-
-      // Active day stops
-      d.stops.forEach((s, sIdx) => {
-        const m = L.circleMarker([s.lat, s.lng], {
-          radius: 7,
-          color: sumi,
-          fillColor: cinnabar,
-          fillOpacity: 1,
-          weight: 2
-        }).bindPopup(`<strong>第 ${d.day} 天｜${s.name}</strong><br>${s.note}`).addTo(markerLayerGroup);
-        if (sIdx === d.stops.length - 1) {
-          m.bindTooltip(`${d.shortLabel}・${s.name}`, { permanent: true, direction: `top`, offset: [0, -8] });
-        }
-      });
-
-      map.flyTo(d.center, d.zoom, { duration: 0.85 });
-    }
-
-    function activateStep(idx) {
-      const nodes = document.querySelectorAll(`.scrolly .step`);
-      nodes.forEach(n => n.classList.remove(`is-active`));
-      if (nodes[idx]) nodes[idx].classList.add(`is-active`);
-      renderMapForDay(idx);
-    }
-
-    function jumpToDay(idx) {
-      const target = document.querySelector(`.scrolly .step[data-step="${idx}"]`);
-      if (target) {
-        target.scrollIntoView({ behavior: `smooth`, block: `center` });
-      }
-      activateStep(idx);
-    }
-
-    function initScrolly() {
-      const nodes = document.querySelectorAll(`.scrolly .step`);
-      if (!nodes.length) return;
-      if (window.scrollama) {
-        const sc = scrollama();
-        sc.setup({ step: `.scrolly .step`, offset: 0.52 })
-          .onStepEnter(({ index }) => activateStep(index));
-        window.addEventListener(`resize`, () => {
-          sc.resize();
-          if (map) map.invalidateSize();
-        });
-      } else {
-        const io = new IntersectionObserver(entries => {
-          entries.forEach(e => {
-            if (e.isIntersecting) activateStep(Number(e.target.dataset.step));
-          });
-        }, { rootMargin: `-40% 0px -40% 0px`, threshold: 0 });
-        nodes.forEach(n => io.observe(n));
-        window.addEventListener(`resize`, () => {
-          if (map) map.invalidateSize();
-        });
-      }
-    }
-
-    // ── Section 3: Mountain Trail Interactive SVG ──
-    function switchTrail(trailKey) {
-      appState.activeTrail = trailKey;
-      appState.activeTrailStop = 0;
-
-      const btnH = document.getElementById(`trail-tab-huangshan`);
-      const btnS = document.getElementById(`trail-tab-sanqingshan`);
-      if (btnH) btnH.classList.toggle(`is-active`, trailKey === `huangshan`);
-      if (btnS) btnS.classList.toggle(`is-active`, trailKey === `sanqingshan`);
-
-      renderTrail();
-    }
-
-    function selectTrailStop(stopIdx) {
-      appState.activeTrailStop = stopIdx;
-      renderTrail();
-    }
-
-    function renderTrail() {
-      const trail = TRAILS[appState.activeTrail];
-      const svg = document.getElementById(`trail-svg`);
-      const stopList = document.getElementById(`trail-stop-list`);
-      const kickerEl = document.getElementById(`trail-kicker`);
-      const nameEl = document.getElementById(`trail-stop-name`);
-      const descEl = document.getElementById(`trail-stop-desc`);
-      const tagEl = document.getElementById(`trail-stop-tag`);
-
-      if (!trail || !svg || !stopList) return;
-
-      const stop = trail.stops[appState.activeTrailStop] || trail.stops[0];
-      if (kickerEl) kickerEl.textContent = trail.kicker;
-      if (nameEl) nameEl.textContent = stop.name;
-      if (descEl) descEl.textContent = stop.desc;
-      if (tagEl) tagEl.textContent = stop.tag;
-
-      const sumi = cssVar(`--on-surface`);
-      const moss = cssVar(`--secondary`);
-      const cinnabar = cssVar(`--tertiary`);
-      const linen = cssVar(`--outline-variant`);
-      const washi = cssVar(`--surface-container-low`);
-      const clay = cssVar(`--surface-container`);
-
-      // Build mountain silhouette + connecting trail path
-      const pointsStr = trail.stops.map(s => `${s.x},${s.y}`).join(` `);
-      const ridgePath = appState.activeTrail === `huangshan`
-        ? `M 0,295 L 70,255 L 150,190 L 185,165 L 250,180 L 295,140 L 360,120 L 405,85 L 460,130 L 505,150 L 560,195 L 605,235 L 680,295 Z`
-        : `M 0,295 L 85,255 L 175,180 L 215,155 L 295,130 L 355,95 L 435,112 L 495,120 L 560,185 L 605,245 L 680,295 Z`;
-
-      let nodesSvg = ``;
-      trail.stops.forEach((s, i) => {
-        const active = i === appState.activeTrailStop;
-        const fillCol = active ? cinnabar : washi;
-        const strokeCol = active ? cinnabar : sumi;
-        const r = active ? 9 : 6;
-        const labelY = s.y < 130 ? s.y - 16 : s.y + 24;
-        nodesSvg += `
-          <g class="trail-node" onclick="selectTrailStop(${i})">
-            <circle cx="${s.x}" cy="${s.y}" r="22" fill="transparent"></circle>
-            <circle cx="${s.x}" cy="${s.y}" r="${r}" fill="${fillCol}" stroke="${strokeCol}" stroke-width="2"></circle>
-            <text x="${s.x}" y="${labelY}" text-anchor="middle" font-size="11.5" font-weight="${active ? 600 : 400}" fill="${active ? cinnabar : sumi}" font-family="var(--font-body)">${s.name.split(`（`)[0]}</text>
-          </g>
-        `;
-      });
-
-      svg.innerHTML = `
-        <line x1="20" y1="295" x2="660" y2="295" stroke="${linen}" stroke-width="1"></line>
-        <path d="${ridgePath}" fill="${clay}" stroke="${linen}" stroke-width="1.2"></path>
-        <polyline points="${pointsStr}" fill="none" stroke="${moss}" stroke-width="2.5" stroke-dasharray="5 4"></polyline>
-        ${nodesSvg}
-      `;
-
-      stopList.innerHTML = ``;
-      trail.stops.forEach((s, i) => {
-        stopList.insertAdjacentHTML(`beforeend`,
-          `<button type="button" class="trail-stop-btn ${i === appState.activeTrailStop ? `is-active` : ``}" onclick="selectTrailStop(${i})">${i + 1}. ${s.name}</button>`
-        );
-      });
-    }
-
-    // ── Section 4: Heritage Filter ──
-    function renderHeritage(theme) {
-      const grid = document.getElementById(`heritage-grid`);
-      if (!grid) return;
-
-      const list = theme === `all`
-        ? HERITAGE_ITEMS
-        : HERITAGE_ITEMS.filter(item => item.theme === theme);
-
-      grid.innerHTML = list.map(item => `
-        <article class="heritage-card">
-          <span class="kicker">${item.tag}</span>
-          <h3>${item.title}</h3>
-          <p>${item.desc}</p>
-        </article>
-      `).join(``);
-    }
-
-    function filterHeritage(theme, btn) {
-      document.querySelectorAll(`#heritage .filter-bar .btn`).forEach(b => b.classList.remove(`is-active`));
-      if (btn) btn.classList.add(`is-active`);
-      renderHeritage(theme);
-    }
-
-    // ── Section 5: Stays & Culinary Guide ──
-    function renderStayFood(mode) {
-      const grid = document.getElementById(`stay-food-grid`);
-      if (!grid) return;
-
-      grid.innerHTML = DAYS.map(d => {
-        const showStay = mode === `all` || mode === `stays`;
-        const showFood = mode === `all` || mode === `food`;
-
-        const stayHtml = showStay
-          ? `<div style="display: grid; gap: 2px;">
-               <span class="kicker">下榻住宿</span>
-               <span class="day-guide-hotel">${d.hotel}</span>
-               <span style="font-size: 0.84rem; color: var(--on-surface-variant);">${d.hotelNote}</span>
-             </div>`
-          : ``;
-
-        const foodHtml = showFood
-          ? `<div class="meal-list">
-               <span class="kicker">各地風味餐食</span>
-               <div class="meal-item"><span class="meal-period">早餐</span><span>${d.meals.b}</span></div>
-               <div class="meal-item"><span class="meal-period">午餐</span><span>${d.meals.l}</span></div>
-               <div class="meal-item"><span class="meal-period">晚餐</span><span>${d.meals.d}</span></div>
-             </div>`
-          : ``;
-
-        return `
-          <article class="day-guide-card">
-            <div class="day-guide-top">
-              <span class="kicker">DAY 0${d.day} · ${d.date}</span>
-              <span class="tag">${d.region}</span>
+            <div class="mt-5 border-t border-ink/10 pt-3 text-xs text-mist font-medium">
+              涵蓋行程：第 5 天黃山、第 6 天三清山與望仙谷、第 7 天龍游石窟
             </div>
-            ${stayHtml}
-            ${foodHtml}
           </article>
-        `;
-      }).join(``);
-    }
 
-    function filterStayFood(mode, btn) {
-      document.querySelectorAll(`#stays-food .filter-bar .btn`).forEach(b => b.classList.remove(`is-active`));
-      if (btn) btn.classList.add(`is-active`);
-      renderStayFood(mode);
-    }
+          <!-- 主題 2 -->
+          <article class="flex flex-col justify-between rounded-2xl border border-ink/10 bg-white p-6 shadow-editorial">
+            <div>
+              <div class="mb-4 flex items-center justify-between">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-bronzeLight text-bronze">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                </span>
+                <span class="font-serif text-xs font-bold tracking-widest text-bronze">貳 · 千年文脈</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-ink">江南水鄉與千年文脈</h3>
+              <p class="mt-1 text-xs font-medium text-mist">儒釋道與書香傳承</p>
+              <div class="mt-4 space-y-3 text-sm leading-relaxed text-inkLight">
+                <p>
+                  <strong class="text-ink">水鄉古鎮：</strong>從上海「川沙古鎮」、文風鼎盛的「紹興」，到江南六大古鎮之首「烏鎮」，串聯起小橋、流水、人家的傳統水鄉生活圖景。
+                </p>
+                <p>
+                  <strong class="text-ink">文化與信仰地標：</strong>涵蓋現存最古老私家藏書樓「寧波天一閣」、近代文學巨匠搖籃「魯迅故里」、佛教禪宗古剎「杭州靈隱寺」，以及「南孔聖地」衢州古城，呈現江南深厚書香與多元宗教底蘊。
+                </p>
+              </div>
+            </div>
+            <div class="mt-5 border-t border-ink/10 pt-3 text-xs text-bronze font-medium">
+              涵蓋行程：第 1～4 天滬浙古鎮書樓、第 7 天衢州、第 9 天烏鎮
+            </div>
+          </article>
 
-    // ── Section 6: Bookmarks & Notebook Persistence ──
-    function toggleBookmark(dayNum) {
-      const pos = appState.bookmarks.indexOf(dayNum);
-      if (pos >= 0) {
-        appState.bookmarks.splice(pos, 1);
-      } else {
-        appState.bookmarks.push(dayNum);
-        appState.bookmarks.sort((a, b) => a - b);
-      }
+          <!-- 主題 3 -->
+          <article class="flex flex-col justify-between rounded-2xl border border-ink/10 bg-white p-6 shadow-editorial">
+            <div>
+              <div class="mb-4 flex items-center justify-between">
+                <span class="flex h-11 w-11 items-center justify-center rounded-2xl bg-paperDark text-ink">
+                  <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.7">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                  </svg>
+                </span>
+                <span class="font-serif text-xs font-bold tracking-widest text-ink">參 · 商都跨度</span>
+              </div>
+              <h3 class="font-serif text-xl font-bold text-ink">古今商都的時代跨度</h3>
+              <p class="mt-1 text-xs font-medium text-bronze">從古代徽商到現代世界超市</p>
+              <div class="mt-4 space-y-3 text-sm leading-relaxed text-inkLight">
+                <p>
+                  <strong class="text-ink">古代商幫：</strong>皖南「徽州古城」與「棠樾牌坊群」見證了明清時期稱雄中國商界數百年的「徽商」文化、儒商精神與宗族倫理。
+                </p>
+                <p>
+                  <strong class="text-ink">近現代與當代經濟：</strong>從見證百年十里洋場風雲的「上海外灘」，到當代全球最大的小商品集散中心「義烏國際商貿城」，完整勾勒出商業文明從傳統走向全球化的演變軌跡。
+                </p>
+              </div>
+            </div>
+            <div class="mt-5 border-t border-ink/10 pt-3 text-xs text-ink font-medium">
+              涵蓋行程：第 1 天上海外灘、第 4 天古徽州、第 8 天義烏商貿城
+            </div>
+          </article>
+        </div>
+      </div>
 
-      document.querySelectorAll(`[data-bookmark-day="${dayNum}"]`).forEach(btn => {
-        const saved = appState.bookmarks.includes(dayNum);
-        btn.classList.toggle(`is-saved`, saved);
-        btn.textContent = saved ? `已收藏` : `收藏亮點`;
-      });
+      <!-- 區塊 2C：路線背後的三大歷史意義 -->
+      <div class="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8 shadow-editorial">
+        <div class="mb-6">
+          <span class="inline-block rounded-full bg-paperDark px-3 py-1 text-xs font-semibold tracking-wider text-ink">HISTORICAL SIGNIFICANCE</span>
+          <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">路線背後的三大歷史意義</h2>
+          <p class="mt-1 text-sm text-inkLight">這不僅是一趟視覺上的山水巡禮，更是一場跨越千年的時空對話</p>
+        </div>
 
-      updateNotebookView();
-      saveState();
-    }
+        <div class="space-y-6">
+          <!-- 歷史意義 1 -->
+          <div class="relative rounded-2xl border border-ink/10 bg-paper p-5 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink font-serif text-base font-bold text-white">
+                一
+              </div>
+              <div>
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-ink">衣冠南渡與文化重心南移（衢州與徽州）</h3>
+                <p class="mt-2 text-sm sm:text-base leading-relaxed text-inkLight">
+                  北宋末年「靖康之難」後，孔子第48代嫡長孫孔端友負孔子及夫人楷木像隨宋高宗南渡，最終定居於浙江<strong class="text-ink">衢州</strong>，使衢州成為「南孔聖地」，確立了江南儒學的中心地位。而鄰近的<strong class="text-ink">古徽州</strong>（今黃山歙縣一帶）則因群山環繞，自魏晉南北朝以來成為中原士族避戰南遷的世外桃源，保留了最純正的漢族宗法制度、理學思想以及精湛的「徽州三雕」（木雕、石雕、磚雕）工藝。
+                </p>
+              </div>
+            </div>
+          </div>
 
-    function updateNotebookView() {
-      const flightLine = document.getElementById(`notebook-flight-line`);
-      const bmLine = document.getElementById(`notebook-bookmarks-line`);
-      const chipsEl = document.getElementById(`notebook-bookmarks-chips`);
+          <!-- 歷史意義 2 -->
+          <div class="relative rounded-2xl border border-ink/10 bg-paper p-5 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-mist font-serif text-base font-bold text-white">
+                二
+              </div>
+              <div>
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-ink">藏書文化與近代思想啟蒙（寧波與紹興）</h3>
+                <p class="mt-2 text-sm sm:text-base leading-relaxed text-inkLight">
+                  明代嘉靖年間，兵部右侍郎范欽在寧波建立<strong class="text-ink">天一閣</strong>，以「天一生水，地六成之」的五行哲學為名（祈求以水克火、保護典籍），成為中國藏書文化的最高象徵。而一脈相承的浙東文化到了清末民初，在<strong class="text-ink">紹興</strong>孕育出魯迅等一批推動現代化與思想啟蒙的先驅，讓這條路線同時具備古典保存與現代革新的雙重歷史意義。
+                </p>
+              </div>
+            </div>
+          </div>
 
-      if (flightLine) {
-        flightLine.textContent = appState.flightPlan === `A`
-          ? `已選航班：方案 A（中華航空 CI 501 / CI 504 ｜ TPE 08:40–10:50 PVG ｜ PVG 19:50–21:50 TPE）`
-          : `已選航班：方案 B（長榮航空 BR 712 / BR 721 ｜ TPE 09:55–12:05 PVG ｜ PVG 20:05–22:00 TPE）`;
-      }
+          <!-- 歷史意義 3 -->
+          <div class="relative rounded-2xl border border-ink/10 bg-paper p-5 sm:p-6">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+              <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bronze font-serif text-base font-bold text-white">
+                三
+              </div>
+              <div>
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-ink">近現代化浪潮與改革開放的縮影（上海與義烏）</h3>
+                <p class="mt-2 text-sm sm:text-base leading-relaxed text-inkLight">
+                  <strong class="text-ink">上海外灘</strong>的萬國建築博覽群，記錄了19世紀中葉開埠以來，西方文化與東方傳統交匯、上海躍升為遠東第一大都會的近現代史。而行程第 8 天深入參訪的<strong class="text-ink">義烏</strong>，則代表了1978年改革開放後，民間從「雞毛換糖」的草根貿易起步，一路發展成連結全球供應鏈的「世界超市」奇蹟。
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      if (bmLine && chipsEl) {
-        if (appState.bookmarks.length === 0) {
-          bmLine.textContent = `尚未收藏特定天數亮點——您可於上方「九日順時針大環線」各日卡片點擊「收藏亮點」。`;
-          chipsEl.innerHTML = ``;
-        } else {
-          bmLine.textContent = `已收藏 ${appState.bookmarks.length} 個焦點行程日（點擊標籤可快速跳轉）：`;
-          chipsEl.innerHTML = appState.bookmarks.map(dayNum => {
-            const d = DAYS.find(item => item.day === dayNum);
-            return `<button type="button" class="btn" onclick="jumpToDay(${dayNum - 1})">第 ${dayNum} 天：${d ? d.region : ``}</button>`;
-          }).join(``);
+    <!-- ===================================================================
+         分頁三：航班時刻與精選住宿總覽（FLIGHTS & HOTELS TAB）
+         =================================================================== -->
+    <section id="panel-logistics" class="tab-panel hidden space-y-10">
+      <!-- 區塊 3A：航班方案比較器 -->
+      <div class="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8 shadow-editorial">
+        <div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <span class="inline-block rounded-full bg-mistLight px-3 py-1 text-xs font-semibold tracking-wider text-mist">FLIGHT SCHEDULE</span>
+            <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">往返航班時刻方案對照</h2>
+            <p class="mt-1 text-sm text-inkLight">桃園（TPE）直飛上海浦東（PVG）雙航空公司方案參考</p>
+          </div>
+
+          <!-- 方案切換器 -->
+          <div class="inline-flex rounded-xl bg-paperDark p-1 self-start sm:self-auto" role="group" aria-label="航班方案篩選">
+            <button type="button" data-flight="compare" class="flight-btn active rounded-lg bg-white px-3.5 py-1.5 text-xs font-semibold text-ink shadow-sm transition">
+              並列對照
+            </button>
+            <button type="button" data-flight="A" class="flight-btn rounded-lg px-3.5 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition">
+              方案 A（華航）
+            </button>
+            <button type="button" data-flight="B" class="flight-btn rounded-lg px-3.5 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition">
+              方案 B（長榮）
+            </button>
+          </div>
+        </div>
+
+        <div id="flight-cards-grid" class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <!-- 方案 A：中華航空 -->
+          <div id="flight-card-A" class="rounded-2xl border border-ink/15 bg-paper p-5 sm:p-6 transition-all">
+            <div class="mb-4 flex items-center justify-between border-b border-dashed border-ink/20 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-ink font-serif text-sm font-bold text-white">華航</span>
+                <div>
+                  <h3 class="font-serif text-lg font-bold text-ink">方案 A（中華航空）</h3>
+                  <p class="text-xs text-inkLight">早去晚回 · 充裕首日古鎮遊覽時光</p>
+                </div>
+              </div>
+              <span class="rounded-full bg-mistLight px-3 py-1 text-xs font-semibold text-mist">CHINA AIRLINES</span>
+            </div>
+
+            <div class="space-y-4">
+              <!-- 去程 -->
+              <div class="rounded-xl bg-white p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-mist">去程｜2027/04/17（六）</span>
+                  <span class="rounded bg-paperDark px-2 py-0.5 font-mono font-bold text-ink">CI 501</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-serif text-2xl font-bold text-ink">08:40</div>
+                    <div class="text-xs text-inkLight">桃園機場（TPE）</div>
+                  </div>
+                  <div class="flex flex-1 flex-col items-center px-3">
+                    <span class="text-[11px] text-inkLight">直飛 2小時10分</span>
+                    <div class="my-1 flex w-full items-center">
+                      <span class="h-1.5 w-1.5 rounded-full bg-mist"></span>
+                      <div class="h-[1px] flex-1 border-t border-dashed border-ink/30"></div>
+                      <svg class="h-4 w-4 text-bronze" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-serif text-2xl font-bold text-ink">10:50</div>
+                    <div class="text-xs text-inkLight">上海浦東（PVG）</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 回程 -->
+              <div class="rounded-xl bg-white p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-bronze">回程｜2027/04/25（日）</span>
+                  <span class="rounded bg-paperDark px-2 py-0.5 font-mono font-bold text-ink">CI 504</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-serif text-2xl font-bold text-ink">19:50</div>
+                    <div class="text-xs text-inkLight">上海浦東（PVG）</div>
+                  </div>
+                  <div class="flex flex-1 flex-col items-center px-3">
+                    <span class="text-[11px] text-inkLight">直飛 2小時00分</span>
+                    <div class="my-1 flex w-full items-center">
+                      <span class="h-1.5 w-1.5 rounded-full bg-bronze"></span>
+                      <div class="h-[1px] flex-1 border-t border-dashed border-ink/30"></div>
+                      <svg class="h-4 w-4 text-mist" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-serif text-2xl font-bold text-ink">21:50</div>
+                    <div class="text-xs text-inkLight">桃園機場（TPE）</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 方案 B：長榮航空 -->
+          <div id="flight-card-B" class="rounded-2xl border border-ink/15 bg-paper p-5 sm:p-6 transition-all">
+            <div class="mb-4 flex items-center justify-between border-b border-dashed border-ink/20 pb-4">
+              <div class="flex items-center gap-3">
+                <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-mist font-serif text-sm font-bold text-white">長榮</span>
+                <div>
+                  <h3 class="font-serif text-lg font-bold text-ink">方案 B（長榮航空）</h3>
+                  <p class="text-xs text-inkLight">從容早班 · 輕鬆出發銜接午餐</p>
+                </div>
+              </div>
+              <span class="rounded-full bg-bronzeLight px-3 py-1 text-xs font-semibold text-bronze">EVA AIR</span>
+            </div>
+
+            <div class="space-y-4">
+              <!-- 去程 -->
+              <div class="rounded-xl bg-white p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-mist">去程｜2027/04/17（六）</span>
+                  <span class="rounded bg-paperDark px-2 py-0.5 font-mono font-bold text-ink">BR 712</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-serif text-2xl font-bold text-ink">09:55</div>
+                    <div class="text-xs text-inkLight">桃園機場（TPE）</div>
+                  </div>
+                  <div class="flex flex-1 flex-col items-center px-3">
+                    <span class="text-[11px] text-inkLight">直飛 2小時10分</span>
+                    <div class="my-1 flex w-full items-center">
+                      <span class="h-1.5 w-1.5 rounded-full bg-mist"></span>
+                      <div class="h-[1px] flex-1 border-t border-dashed border-ink/30"></div>
+                      <svg class="h-4 w-4 text-bronze" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-serif text-2xl font-bold text-ink">12:05</div>
+                    <div class="text-xs text-inkLight">上海浦東（PVG）</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 回程 -->
+              <div class="rounded-xl bg-white p-4 shadow-sm">
+                <div class="mb-2 flex items-center justify-between text-xs">
+                  <span class="font-semibold text-bronze">回程｜2027/04/25（日）</span>
+                  <span class="rounded bg-paperDark px-2 py-0.5 font-mono font-bold text-ink">BR 721</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div>
+                    <div class="font-serif text-2xl font-bold text-ink">20:05</div>
+                    <div class="text-xs text-inkLight">上海浦東（PVG）</div>
+                  </div>
+                  <div class="flex flex-1 flex-col items-center px-3">
+                    <span class="text-[11px] text-inkLight">直飛 1小時55分</span>
+                    <div class="my-1 flex w-full items-center">
+                      <span class="h-1.5 w-1.5 rounded-full bg-bronze"></span>
+                      <div class="h-[1px] flex-1 border-t border-dashed border-ink/30"></div>
+                      <svg class="h-4 w-4 text-mist" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" />
+                      </svg>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="font-serif text-2xl font-bold text-ink">22:00</div>
+                    <div class="text-xs text-inkLight">桃園機場（TPE）</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊 3B：八晚精選住宿一覽表 -->
+      <div>
+        <div class="mb-6">
+          <span class="inline-block rounded-full bg-bronzeLight px-3 py-1 text-xs font-semibold tracking-wider text-bronze">CURATED STAYS</span>
+          <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">八晚精選下榻酒店一覽</h2>
+          <p class="mt-1 text-sm text-inkLight">結合國際連鎖品牌舒適度、黃山門戶連住便利性與望仙谷懸崖景觀體驗</p>
+        </div>
+
+        <div id="hotels-grid" class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <!-- 由 JS 渲染 7 間飯店（涵蓋 8 晚住宿） -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         分頁四：高山健行與互動行前準備清單（HIKING & CHECKLIST TAB）
+         =================================================================== -->
+    <section id="panel-prep" class="tab-panel hidden space-y-10">
+      <!-- 區塊 4A：雙世界遺產高山健行指南 -->
+      <div class="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8 shadow-editorial">
+        <div class="mb-6">
+          <span class="inline-block rounded-full bg-mistLight px-3 py-1 text-xs font-semibold tracking-wider text-mist">ALPINE TREKKING GUIDE</span>
+          <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">黃山・三清山 雙名山健行貼心指南</h2>
+          <p class="mt-1 text-sm text-inkLight">針對第 5 天黃山全日遊與第 6 天三清山高空棧道環線的路線解析與補給錦囊</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <!-- 第 5 天黃山健行路線卡 -->
+          <div class="rounded-2xl border border-mist/25 bg-paper p-5 sm:p-6">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="rounded-lg bg-mist px-3 py-1 text-xs font-bold text-white">第 5 天（4/21）｜天下第一奇山</span>
+              <span class="text-xs font-medium text-mist">雙索道上下 · 精華全覽</span>
+            </div>
+            <h3 class="font-serif text-xl font-bold text-ink">安徽黃山風景區健行路線圖解</h3>
+            <p class="mt-2 text-sm leading-relaxed text-inkLight">
+              清晨由湯口鎮換乘景區環保觀光車至雲谷寺，搭乘<strong class="text-ink">雲谷索道</strong>輕鬆上山，串連後山秀麗峰林與前山雄偉奇松：
+            </p>
+            <div class="mt-4 rounded-xl bg-white p-3.5 text-xs sm:text-sm font-medium text-ink shadow-sm leading-relaxed">
+              湯口換乘中心 ➔ 雲谷索道上山 ➔ <span class="text-mist font-bold">始信峰</span> ➔ <span class="text-mist font-bold">北海景區</span>（遠眺猴子觀海） ➔ <span class="text-mist font-bold">光明頂</span>（遠眺天海） ➔ 鰲魚峰 ➔ 百步雲梯 ➔ <span class="text-bronze font-bold">玉屏樓迎客松</span> ➔ 玉屏索道下山至慈光閣 ➔ 返回湯口鎮
+            </div>
+            <ul class="mt-4 space-y-2 text-xs sm:text-sm text-inkLight">
+              <li class="flex items-start gap-2">
+                <span class="mt-0.5 text-bronze">●</span>
+                <span><strong class="text-ink">湯口鎮補給秘訣：</strong>第 4 天傍晚抵達湯口鎮入住「藝龍萬國飯店」後，周邊商店林立，可就近採買輕便登山杖、雨衣、暖暖包與高山能量乾糧。</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="mt-0.5 text-bronze">●</span>
+                <span><strong class="text-ink">春季氣候提示：</strong>4 月下旬黃山山頂氣溫約 8°C～16°C，日夜溫差大且雲霧瞬息萬變，建議採取防風外套搭配排汗內層的洋蔥式穿法。</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- 第 6 天三清山健行路線卡 -->
+          <div class="rounded-2xl border border-bronze/30 bg-paper p-5 sm:p-6">
+            <div class="mb-3 flex items-center justify-between">
+              <span class="rounded-lg bg-bronze px-3 py-1 text-xs font-bold text-white">第 6 天（4/22）｜道教花崗岩仙山</span>
+              <span class="text-xs font-medium text-bronze">經典 5 小時高空棧道環線</span>
+            </div>
+            <h3 class="font-serif text-xl font-bold text-ink">江西三清山懸崖高空棧道環線</h3>
+            <p class="mt-2 text-sm leading-relaxed text-inkLight">
+              搭乘<strong class="text-ink">金沙索道</strong>直達山腰精華區，沿著依附在萬丈絕壁上的平緩高空棧道漫步，免去過度陡峭攀爬即可飽覽花崗岩峰林奇觀：
+            </p>
+            <div class="mt-4 rounded-xl bg-white p-3.5 text-xs sm:text-sm font-medium text-ink shadow-sm leading-relaxed">
+              金沙索道上山 ➔ <span class="text-mist font-bold">南清園景區</span>（神龍戲松、巨蟒出山、東方女神） ➔ <span class="text-bronze font-bold">陽光海岸高空棧道</span> ➔ <span class="text-bronze font-bold">西海岸高空棧道</span>（俯瞰萬丈深谷與雲海） ➔ 索道下山前往望仙谷
+            </div>
+            <ul class="mt-4 space-y-2 text-xs sm:text-sm text-inkLight">
+              <li class="flex items-start gap-2">
+                <span class="mt-0.5 text-mist">●</span>
+                <span><strong class="text-ink">步履與護膝建議：</strong>高空棧道雖平緩好走，但連續 5 小時步行仍建議穿著抓地力佳的防滑健行鞋，並可攜帶護膝減輕下階梯負擔。</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="mt-0.5 text-mist">●</span>
+                <span><strong class="text-ink">防風與防曬：</strong>高空棧道視野開闊無遮蔽，山風較強且紫外線充足，建議備妥遮陽帽、太陽眼鏡與防風連帽外套。</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊 4B：互動式行前準備檢查表（PACKING CHECKLIST） -->
+      <div class="rounded-3xl border border-ink/10 bg-white p-6 sm:p-8 shadow-editorial">
+        <div class="flex flex-col justify-between gap-4 border-b border-ink/10 pb-5 sm:flex-row sm:items-end">
+          <div>
+            <span class="inline-block rounded-full bg-bronzeLight px-3 py-1 text-xs font-semibold tracking-wider text-bronze">INTERACTIVE CHECKLIST</span>
+            <h2 class="mt-2 font-serif text-2xl sm:text-3xl font-bold text-ink">巴洛克之友 · 行前打包檢查表</h2>
+            <p class="mt-1 text-sm text-inkLight">勾選狀態與新增項目將自動儲存在您的瀏覽器中，隨時隨地核對行李。</p>
+          </div>
+
+          <!-- 打包進度條 -->
+          <div class="w-full sm:w-64">
+            <div class="mb-1.5 flex items-center justify-between text-xs font-semibold">
+              <span class="text-inkLight">打包完成度</span>
+              <span id="checklist-progress-text" class="text-mist">0 / 0 (0%)</span>
+            </div>
+            <div class="h-2.5 w-full overflow-hidden rounded-full bg-paperDark">
+              <div id="checklist-progress-bar" class="h-full rounded-full bg-gradient-to-r from-mist to-bronze transition-all duration-300" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 新增自訂清單項目表單 -->
+        <form id="add-checklist-form" class="mt-5 flex flex-col gap-2.5 sm:flex-row">
+          <select id="new-item-category" aria-label="選擇分類" class="rounded-xl border border-ink/15 bg-paper px-3.5 py-2.5 text-sm text-ink focus:border-mist focus:outline-none">
+            <option value="證件與金融">證件與金融</option>
+            <option value="高山健行裝備">高山健行裝備</option>
+            <option value="春季洋蔥穿搭">春季洋蔥穿搭</option>
+            <option value="電子與個人用品">電子與個人用品</option>
+          </select>
+          <input
+            type="text"
+            id="new-item-input"
+            placeholder="輸入想新增的個人物品（例如：常備腸胃藥、相機備用電池...）"
+            class="flex-1 rounded-xl border border-ink/15 bg-paper px-4 py-2.5 text-sm text-ink placeholder:text-inkLight/60 focus:border-mist focus:outline-none"
+          />
+          <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-ink px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-mist transition">
+            <span>＋ 新增項目</span>
+          </button>
+        </form>
+
+        <!-- 分類清單網格 -->
+        <div id="checklist-grid" class="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
+          <!-- 由 JS 動態渲染四個分類的打包清單 -->
+        </div>
+
+        <!-- 底部重設控制列（使用內嵌確認 UI，絕不使用 confirm()） -->
+        <div class="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-ink/10 pt-4">
+          <span class="text-xs text-inkLight">提示：勾選進度僅保存在您目前的裝置瀏覽器內。</span>
+          <div id="reset-checklist-wrapper" class="flex items-center gap-2">
+            <button type="button" id="btn-reset-prompt" class="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-inkLight hover:border-cinnabar hover:text-cinnabar transition">
+              恢復預設清單
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =====================================================================
+       頁尾（FOOTER）
+       ===================================================================== -->
+  <footer class="mt-12 border-t border-ink/10 bg-paperDark/70 py-10">
+    <div class="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
+      <div class="inline-flex items-center gap-2">
+        <span class="seal-stamp rounded px-2 py-0.5 font-serif text-xs font-bold">巴洛克之友</span>
+        <span class="font-serif text-base font-bold text-ink">滬浙皖贛名山勝境、古鎮商都精彩九日遊</span>
+      </div>
+      <p class="mt-2 text-xs text-inkLight">
+        2027年4月17日（六）～ 4月25日（日）｜上海・寧波・紹興・杭州・徽州・黃山・三清山・望仙谷・衢州・龍游・義烏・烏鎮
+      </p>
+      <p class="mt-4 text-[11px] text-inkLight/70">
+        本互動導覽手冊專為「巴洛克之友」團員設計，祝您旅途平安順心、飽覽山水文華。
+      </p>
+    </div>
+  </footer>
+
+  <!-- 懸浮返回頂部按鈕 -->
+  <button
+    type="button"
+    id="btn-back-to-top"
+    aria-label="返回頂部"
+    class="fixed bottom-5 right-5 z-30 hidden h-11 w-11 items-center justify-center rounded-full bg-ink text-white shadow-lg hover:bg-mist transition-all duration-300"
+  >
+    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+    </svg>
+  </button>
+
+  <!-- 非侵入式訊息提示框（Toast Notification，取代 alert） -->
+  <div id="toast-container" class="pointer-events-none fixed bottom-5 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2"></div>
+
+  <!-- =====================================================================
+       JAVASCRIPT 互動邏輯與完整資料庫
+       ===================================================================== -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // -------------------------------------------------------------------
+      // 1. 完整九日行程資料庫（100% 忠實呈現所有細節）
+      // -------------------------------------------------------------------
+      const ITINERARY_DATA = [
+        {
+          day: 1,
+          date: '4/17（六）',
+          region: '上海 · 滬',
+          route: ['抵達上海', '川沙古鎮', '南京西路', '外灘風華', '城隍廟商圈'],
+          themes: ['watertown', 'commerce'],
+          themeLabels: ['水鄉古城', '商業都會'],
+          description: '班機抵達上海浦東國際機場後專車接機。首站前往川沙古鎮，漫步護城河畔感受老上海水鄉古韻；午後前往南京西路步行街體驗繁華都會氣象，傍晚漫步外灘欣賞萬國建築博覽群與黃浦江兩岸天際線，晚間於上海城隍廟商圈自由品嚐道地小吃。',
+          highlight: '外灘面臨黃浦江，隔江遠眺陸家嘴摩天大樓，是領略上海近現代百年風雲與璀璨夜色的核心地標。',
+          meals: {
+            breakfast: '機上輕食',
+            lunch: '川沙古鎮風味餐',
+            dinner: '上海城隍廟商圈（配合逛街自理餐）'
+          },
+          hotel: '上海智選假日酒店',
+          motif: 'bund'
+        },
+        {
+          day: 2,
+          date: '4/18（日）',
+          region: '浙江 · 寧波／紹興',
+          route: ['杭州灣跨海大橋', '寧波天一閣博物館與月湖', '紹興水鄉'],
+          themes: ['watertown'],
+          themeLabels: ['水鄉古城', '藏書文化'],
+          description: '晨間專車南下，車觀跨越杭州灣海面的杭州灣跨海大橋壯麗海景，抵達甬城寧波。午後探訪中國現存歷史最悠久的私家藏書樓天一閣與月湖公園，隨後驅車前往文風鼎盛的水鄉紹興。',
+          highlight: '天一閣建於明代嘉靖年間，園林與水池環繞書樓，是江南極具代表性的私家藏書樓建築群與古典園林典範。',
+          meals: {
+            breakfast: '飯店內',
+            lunch: '寧波海鮮風味料理',
+            dinner: '紹興當地特色餐'
+          },
+          hotel: '紹興袍江智選假日酒店',
+          motif: 'pavilion'
+        },
+        {
+          day: 3,
+          date: '4/19（一）',
+          region: '浙江 · 紹興／杭州',
+          route: ['紹興市區精華巡禮', '西湖漫步', '靈隱古剎祈福'],
+          themes: ['watertown', 'mountain'],
+          themeLabels: ['水鄉古城', '名山仙境'],
+          description: '上午在紹興市區參觀著名的歷史文化街區魯迅故里，感受文人墨客的故居墨香與水鄉烏篷船韻味。午後驅車抵達杭州，漫步西湖蘇堤與花港觀魚，隨後走入西湖群山之間的飛來峰靈隱禪寺參拜。',
+          highlight: '魯迅故里完整保存了魯迅童年生活的三味書屋與百草園，是深入探索紹興傳統台門建築與水鄉歷史的首選景點。',
+          meals: {
+            breakfast: '飯店內',
+            lunch: '杭州著名麵食館',
+            dinner: '杭州特色宴'
+          },
+          hotel: '杭州東站智選假日酒店',
+          motif: 'westlake'
+        },
+        {
+          day: 4,
+          date: '4/20（二）',
+          region: '浙江杭州 ➔ 安徽古徽州',
+          route: ['杭州西溪濕地', '歙縣棠樾牌坊群', '徽州古城', '湯口鎮'],
+          themes: ['watertown', 'commerce'],
+          themeLabels: ['水鄉古城', '古徽商文化'],
+          description: '早晨前往西溪國家濕地公園搭乘搖櫓船穿越蘆葦水道；午後驅車西行跨入皖南古徽州，參觀歙縣著名的棠樾牌坊群與鮑家花園，探訪徽州古城（徽州府衙、許國石坊）並細賞木雕、石雕、磚雕之「徽州三雕」工藝。傍晚抵達黃山南大門湯口鎮。',
+          highlight: '皖南古徽州完整保存明清宗族牌坊與「徽州三雕」建築藝術，湯口鎮則為登臨黃山南大門的重要門戶與休憩基地。',
+          meals: {
+            breakfast: '飯店內',
+            lunch: '沿途著名地方料理',
+            dinner: '湯口鎮暖胃火鍋'
+          },
+          hotel: '黃山景區湯口鎮藝龍萬國飯店（連住兩晚第1晚）',
+          motif: 'huizhou'
+        },
+        {
+          day: 5,
+          date: '4/21（三）',
+          region: '安徽 · 黃山風景區',
+          route: ['黃山全日奇景探訪（始信峰、北海、光明頂、鰲魚峰、玉屏樓迎客松）'],
+          themes: ['mountain'],
+          themeLabels: ['名山仙境', '世界自然遺產'],
+          description: '全日深入登臨黃山風景區。清晨於湯口換乘景區觀光車至雲谷寺纜車站，搭乘雲谷索道上山，漫步遊覽始信峰、北海景區遠眺猴子觀海；隨後翻越光明頂遠眺天海，經鰲魚峰、穿百步雲梯，抵達玉屏樓仰望千年迎客松。最後搭乘玉屏索道下山至慈光閣，搭乘環保景觀車返回湯口鎮。',
+          highlight: '黃山風景區以奇松、怪石、雲海、溫泉「四絕」名冠天下，春季登頂常能欣賞到壯闊雲海與千姿百態的奇峰絕壁。',
+          meals: {
+            breakfast: '飯店內',
+            lunch: '黃山景區高山觀景餐廳',
+            dinner: '徽州道地料理'
+          },
+          hotel: '黃山景區湯口鎮藝龍萬國飯店（連住兩晚第2晚）',
+          motif: 'huangshan'
+        },
+        {
+          day: 6,
+          date: '4/22（四）',
+          region: '安徽 ➔ 江西上饒',
+          route: ['黃山出發', '江西道教仙山「三清山」（5小時精華環線）', '崖壁仙宿「望仙谷」'],
+          themes: ['mountain'],
+          themeLabels: ['名山仙境', '懸崖仙俠夜景'],
+          description: '早餐後啟程前往江西上饒的世界自然遺產三清山，安排經典5小時懸崖高空棧道徒步環線：由金沙索道上山，串連「南清園景區」欣賞神龍戲松、巨蟒出山、東方女神，接續走「陽光海岸高空棧道」與「西海岸高空棧道」，俯瞰萬丈深谷與奇石奇松後索道下山。傍晚抵達望仙谷風景區，入住觀景民宿，夜幕降臨後欣賞懸崖絕壁懸樓亮起金碧燈火的奇幻夜景。',
+          highlight: '三清山風景區擁有世界罕見的花崗岩峰林奇觀與驚險平緩的高空棧道，被譽為西太平洋邊緣最美麗的花崗岩地貌；望仙峽谷小鎮依山傍崖而建，將贛東北傳統夯土民居與奇秀峽谷水系結合，夜晚懸崖棧閣點燈後如仙俠世界般壯麗。',
+          meals: {
+            breakfast: '飯店內',
+            lunch: '三清山當地土雞農家菜',
+            dinner: '望仙谷贛東特色農家風味'
+          },
+          hotel: '望仙谷觀景渡假民宿',
+          motif: 'wangxian'
+        },
+        {
+          day: 7,
+          date: '4/23（五）',
+          region: '江西 ➔ 浙江衢州／龍游',
+          route: ['望仙谷晨曦', '衢州古城（水亭門）', '龍游石窟'],
+          themes: ['watertown', 'mountain'],
+          themeLabels: ['水鄉古城', '地下奇觀'],
+          description: '清晨在望仙谷幽靜峽谷中醒來，隨後專車開往浙江「南孔聖地」衢州。參觀衢州古城（水亭門歷史文化街區、古城牆），感受儒風流芳的江南古城氛圍；午後專車前往探訪被譽為「地下奇觀」的龍游石窟，深入地下石室群，探索千古未解的宏偉人工石窟與雕刻謎團。',
+          highlight: '衢州為孔子嫡長孫南渡定居的「南孔聖地」；龍游石窟則是規模宏大、令人驚嘆的古代地下人工建築奇觀。',
+          meals: {
+            breakfast: '民宿或酒店內',
+            lunch: '由錡錡特別安排之在地精選料理',
+            dinner: '衢州當地特色餐廳'
+          },
+          hotel: '衢州萬豪酒店',
+          motif: 'quzhou'
+        },
+        {
+          day: 8,
+          date: '4/24（六）',
+          region: '浙江 · 金華義烏',
+          route: ['義烏全球小商品商貿城深度參訪'],
+          themes: ['commerce'],
+          themeLabels: ['商業都會', '世界超市'],
+          description: '早餐後前往全球知名的小商品之都——義烏。由尤正華當地好友游壽東先生帶領導覽，深度參訪義烏國際商貿城（一至五區各類工藝品、飾品、日用品及新創外貿展館），親身感受「世界超市」的蓬勃貿易生機。',
+          highlight: '義烏國際商貿城被譽為「世界超市」，從草根「雞毛換糖」發展至連結全球供應鏈的貿易奇蹟。',
+          meals: {
+            breakfast: '酒店內',
+            lunch: '配合逛商場自理餐',
+            dinner: '游壽東好友熱情安排之在地佳餚'
+          },
+          hotel: '義烏金豪東方酒店',
+          motif: 'yiwu'
+        },
+        {
+          day: 9,
+          date: '4/25（日）',
+          region: '浙江嘉興烏鎮 ➔ 上海返台',
+          route: ['義烏出發', '烏鎮水鄉巡禮', '浦東國際機場返台'],
+          themes: ['watertown'],
+          themeLabels: ['水鄉古城', '江南六大古鎮'],
+          description: '清晨由義烏出發經嘉興地區前往江南水鄉代表烏鎮，漫步於青石板路上，參觀古色古香的木造水閣、傳統染坊與古橋倒影，感受「小橋、流水、人家」的水鄉意境。午後享用古鎮道地風味餐後，專車平穩駛向上海浦東國際機場辦理登機手續，搭機返回桃園機場，結束收穫滿滿的九日精彩旅程。',
+          highlight: '烏鎮景區名列江南六大古鎮之一，擁有千年水鄉歷史，完整的晚清和民國時期水鄉古建築風貌保存完好。',
+          meals: {
+            breakfast: '酒店內',
+            lunch: '烏鎮水鄉風味餐',
+            dinner: '機上精緻簡餐（溫暖返台）'
+          },
+          hotel: '溫暖的家（桃園國際機場返抵）',
+          motif: 'wuzhen'
         }
-      }
-    }
-
-    function exportTripNotes() {
-      const lines = [
-        `巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊`,
-        `行程日期：2027年4月17日（六）～ 4月25日（日）`,
-        ``,
-        `【個人偏好航班】`,
-        appState.flightPlan === `A`
-          ? `方案 A（中華航空）：去程 CI 501 (08:40-10:50) ／ 回程 CI 504 (19:50-21:50)`
-          : `方案 B（長榮航空）：去程 BR 712 (09:55-12:05) ／ 回程 BR 721 (20:05-22:00)`,
-        ``,
-        `【收藏焦點天數】`,
-        appState.bookmarks.length
-          ? appState.bookmarks.map(n => {
-              const d = DAYS.find(x => x.day === n);
-              return d ? `- 第 ${d.day} 天 (${d.date})：${d.title}｜宿：${d.hotel}` : ``;
-            }).join(`\n`)
-          : `（尚未標記特定天數）`,
-        ``,
-        `【九日完整摘要】`,
-        ...DAYS.map(d => `第 ${d.day} 天 (${d.date})：${d.title}\n  餐食：早/${d.meals.b} 午/${d.meals.l} 晚/${d.meals.d}\n  住宿：${d.hotel}`)
       ];
 
-      const content = lines.join(`\n`);
-      const filename = `巴洛克之友_滬浙皖贛九日遊筆記.txt`;
+      // -------------------------------------------------------------------
+      // 2. 互動環線路線圖節點資料庫
+      // -------------------------------------------------------------------
+      const MAP_NODES = [
+        {
+          id: 'pudong',
+          name: '上海浦東機場',
+          x: 638,
+          y: 142,
+          days: [1, 9],
+          dayLabel: '第 1 天抵達 / 第 9 天返台',
+          province: '上海市',
+          category: 'commerce',
+          summary: '行程起終點門戶。首日抵達後專車接機前往川沙古鎮；第 9 天午後自烏鎮駛向浦東機場搭機返台。'
+        },
+        {
+          id: 'shanghai',
+          name: '川沙古鎮・上海外灘',
+          x: 602,
+          y: 124,
+          days: [1],
+          dayLabel: '第 1 天（4/17）',
+          province: '上海市',
+          category: 'commerce',
+          summary: '走訪機場旁的明清古鎮「川沙古鎮」，午後漫步南京西路，傍晚於外灘欣賞萬國建築群與陸家嘴璀璨天際線。'
+        },
+        {
+          id: 'bridge',
+          name: '杭州灣跨海大橋',
+          x: 625,
+          y: 202,
+          days: [2],
+          dayLabel: '第 2 天（4/18）',
+          province: '滬浙海域',
+          category: 'commerce',
+          summary: '晨間專車南下，車觀跨越杭州灣海面的跨海長虹壯麗海景，連結上海與甬城寧波。'
+        },
+        {
+          id: 'ningbo',
+          name: '寧波天一閣',
+          x: 628,
+          y: 245,
+          days: [2],
+          dayLabel: '第 2 天（4/18）',
+          province: '浙江省寧波市',
+          category: 'watertown',
+          summary: '探訪明代嘉靖年間范欽所建「天一閣」，體悟「天一生水」藏書哲學與江南古典園林月湖風光。'
+        },
+        {
+          id: 'shaoxing',
+          name: '紹興魯迅故里',
+          x: 545,
+          y: 242,
+          days: [2, 3],
+          dayLabel: '第 2～3 天（4/18～4/19）',
+          province: '浙江省紹興市',
+          category: 'watertown',
+          summary: '參觀三味書屋與百草園，感受越劇之鄉、傳統台門建築與水鄉烏篷船的濃厚書卷氣息。'
+        },
+        {
+          id: 'hangzhou',
+          name: '杭州西湖・西溪濕地',
+          x: 485,
+          y: 222,
+          days: [3, 4],
+          dayLabel: '第 3～4 天（4/19～4/20）',
+          province: '浙江省杭州市',
+          category: 'mountain',
+          summary: '漫步西湖蘇堤與花港觀魚、參拜飛來峰靈隱禪寺；第 4 天早晨於西溪濕地搭乘搖櫓船穿越蘆葦水道。'
+        },
+        {
+          id: 'huizhou',
+          name: '歙縣棠樾牌坊・徽州古城',
+          x: 335,
+          y: 265,
+          days: [4],
+          dayLabel: '第 4 天（4/20）',
+          province: '安徽省黃山市歙縣',
+          category: 'watertown',
+          summary: '跨入皖南古徽州，細賞棠樾牌坊群、鮑家花園與徽州古城「徽州三雕」工藝，見證百年徽商宗族文化。'
+        },
+        {
+          id: 'huangshan',
+          name: '黃山風景區・湯口鎮',
+          x: 278,
+          y: 292,
+          days: [4, 5],
+          dayLabel: '第 4～5 天（4/20～4/21）',
+          province: '安徽省黃山市',
+          category: 'mountain',
+          summary: '連住兩晚黃山南大門湯口鎮；第 5 天雙索道登頂黃山，串連始信峰、北海、光明頂與玉屏樓千年迎客松。'
+        },
+        {
+          id: 'sanqingshan',
+          name: '江西三清山',
+          x: 192,
+          y: 382,
+          days: [6],
+          dayLabel: '第 6 天（4/22）',
+          province: '江西省上饒市',
+          category: 'mountain',
+          summary: '挑戰世界自然遺產 5 小時高空棧道環線，近距離仰望巨蟒出山、東方女神等罕見花崗岩峰林奇觀。'
+        },
+        {
+          id: 'wangxian',
+          name: '望仙谷懸崖小鎮',
+          x: 228,
+          y: 432,
+          days: [6, 7],
+          dayLabel: '第 6～7 天（4/22～4/23）',
+          province: '江西省上饒市',
+          category: 'mountain',
+          summary: '入住峽谷觀景民宿，欣賞夜幕降臨時懸崖絕壁夯土閣樓點亮金碧燈火的仙俠奇幻夜色。'
+        },
+        {
+          id: 'quzhou',
+          name: '衢州古城（水亭門）',
+          x: 348,
+          y: 392,
+          days: [7],
+          dayLabel: '第 7 天（4/23）',
+          province: '浙江省衢州市',
+          category: 'watertown',
+          summary: '走訪北宋靖康之難後孔子嫡長孫南渡定居的「南孔聖地」，漫步水亭門歷史街區與古城牆。'
+        },
+        {
+          id: 'longyou',
+          name: '龍游石窟',
+          x: 398,
+          y: 372,
+          days: [7],
+          dayLabel: '第 7 天（4/23）',
+          province: '浙江省衢州市龍游縣',
+          category: 'mountain',
+          summary: '深入規模宏偉的古代地下人工石室群，探索千古未解的工程力學與神祕雕刻謎團。'
+        },
+        {
+          id: 'yiwu',
+          name: '義烏國際商貿城',
+          x: 462,
+          y: 315,
+          days: [8],
+          dayLabel: '第 8 天（4/24）',
+          province: '浙江省金華市義烏',
+          category: 'commerce',
+          summary: '由尤正華好友游壽東先生帶領導覽一至五區展館，親身感受「世界超市」的蓬勃貿易生命力。'
+        },
+        {
+          id: 'wuzhen',
+          name: '嘉興烏鎮水鄉',
+          x: 545,
+          y: 168,
+          days: [9],
+          dayLabel: '第 9 天（4/25）',
+          province: '浙江省嘉興市桐鄉',
+          category: 'watertown',
+          summary: '旅程壓軸經嘉興前往江南六大古鎮之首烏鎮，漫步青石板路、傳統染坊與木造水閣，品味小橋流水人家。'
+        }
+      ];
 
-      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
-        window.notebookAppApi.triggerFileDownload({
-          content: content,
-          contentType: `text/plain`,
-          encoding: `UTF-8`,
-          filename: filename
-        });
-      } else {
-        const blob = new Blob([content], { type: `text/plain;charset=utf-8` });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement(`a`);
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
-      }
+      // -------------------------------------------------------------------
+      // 3. 八晚精選住宿資料庫
+      // -------------------------------------------------------------------
+      const HOTELS_DATA = [
+        {
+          nights: '第 1 晚（4/17）',
+          name: '上海智選假日酒店',
+          city: '上海市',
+          dayRef: 1,
+          tag: '國際連鎖 · 都會便利',
+          desc: '洲際酒店集團旗下精選品牌，現代簡約舒適客房，助您首日抵滬後獲得充分休憩，迎接翌日的跨海大橋之旅。'
+        },
+        {
+          nights: '第 2 晚（4/18）',
+          name: '紹興袍江智選假日酒店',
+          city: '浙江省紹興市',
+          dayRef: 2,
+          tag: '越州水鄉 · 舒適商旅',
+          desc: '坐落於歷史文化名城紹興，環境清幽雅緻，方便隔日上午從容前往魯迅故里展開水鄉文化巡禮。'
+        },
+        {
+          nights: '第 3 晚（4/19）',
+          name: '杭州東站智選假日酒店',
+          city: '浙江省杭州市',
+          dayRef: 3,
+          tag: '交通樞紐 · 品質連鎖',
+          desc: '結束西湖漫步與靈隱禪寺祈福後的安心下榻之選，設施完善，次日早晨可迅速前往西溪濕地。'
+        },
+        {
+          nights: '第 4、5 晚（4/20～4/21 連住兩晚）',
+          name: '黃山景區湯口鎮藝龍萬國飯店',
+          city: '安徽省黃山市 · 黃山南大門',
+          dayRef: 4,
+          tag: '連住兩晚 · 白牆黛瓦徽派設計',
+          highlight: true,
+          desc: '緊鄰黃山風景區南大門換乘中心，省去換飯店搬運行李辛勞！周邊餐飲與登山杖、雨衣補給商店林立，是登臨黃山的最佳基地。'
+        },
+        {
+          nights: '第 6 晚（4/22）',
+          name: '望仙谷觀景渡假民宿',
+          city: '江西省上饒市 · 望仙峽谷',
+          dayRef: 6,
+          tag: '懸崖峽谷 · 仙俠夜色體驗',
+          highlight: true,
+          desc: '入住景區特色觀景民宿，推窗即見奇秀峽谷與贛東北夯土民居風情，夜幕降臨時可悠閒漫步欣賞懸崖閣樓燈火夜景。'
+        },
+        {
+          nights: '第 7 晚（4/23）',
+          name: '衢州萬豪酒店',
+          city: '浙江省衢州市 · 南孔聖地',
+          dayRef: 7,
+          tag: '五星奢華 · 舒緩登山疲勞',
+          desc: '國際五星級酒店尊榮禮遇，在經歷黃山與三清山兩日名山健行後，提供寬敞雅緻的休憩空間與優質服務。'
+        },
+        {
+          nights: '第 8 晚（4/24）',
+          name: '義烏金豪東方酒店',
+          city: '浙江省金華市 · 義烏商都',
+          dayRef: 8,
+          tag: '商都精選 · 位置優越',
+          desc: '位於全球小商品之都義烏，交通便利、客房典雅舒適，方便在商貿城深度參訪與晚宴後整裝打包戰利品。'
+        }
+      ];
 
-      const status = document.getElementById(`notebook-status`);
-      if (status) status.textContent = `已匯出「${filename}」。`;
-    }
+      // -------------------------------------------------------------------
+      // 4. 預設行前打包清單資料
+      // -------------------------------------------------------------------
+      const DEFAULT_CHECKLIST = [
+        { id: 'c1', category: '證件與金融', text: '有效期內之護照、台胞證（確認未過期）', checked: false, custom: false },
+        { id: 'c2', category: '證件與金融', text: '人民幣現鈔（備零錢）與已開通海外刷卡之信用卡', checked: false, custom: false },
+        { id: 'c3', category: '證件與金融', text: '手機支付寶 / 微信支付實名認證與綁卡測試', checked: false, custom: false },
+        { id: 'c4', category: '高山健行裝備', text: '防滑抓地力佳的健行鞋 / 運動鞋（應對黃山與三清山步道）', checked: false, custom: false },
+        { id: 'c5', category: '高山健行裝備', text: '輕便雙肩後背包（登山隨身攜帶水、雨具與外套）', checked: false, custom: false },
+        { id: 'c6', category: '高山健行裝備', text: '摺疊雨傘與輕便雨衣（春季山區陣雨備用，亦可於湯口鎮購買）', checked: false, custom: false },
+        { id: 'c7', category: '高山健行裝備', text: '護膝、防曬帽、太陽眼鏡與保溫水壺', checked: false, custom: false },
+        { id: 'c8', category: '春季洋蔥穿搭', text: '防風連帽外套或輕羽絨（黃山山頂早晚溫差大）', checked: false, custom: false },
+        { id: 'c9', category: '春季洋蔥穿搭', text: '透氣吸濕排汗長袖上衣與舒適長褲（建議 4～5 套替換）', checked: false, custom: false },
+        { id: 'c10', category: '春季洋蔥穿搭', text: '晚宴或古城拍照搭配之輕便休閒服飾', checked: false, custom: false },
+        { id: 'c11', category: '電子與個人用品', text: '行動電源（注意須隨身登機，不可託運）與充電線', checked: false, custom: false },
+        { id: 'c12', category: '電子與個人用品', text: '大陸漫遊 SIM 卡 / eSIM（確保網路暢通）', checked: false, custom: false },
+        { id: 'c13', category: '電子與個人用品', text: '個人常備藥品（暈車藥、腸胃藥、肌肉痠痛貼布、OK繃）', checked: false, custom: false }
+      ];
 
-    function resetTripNotes(btn) {
-      if (!btn) return;
-      if (btn.dataset.armed !== `true`) {
-        btn.dataset.armed = `true`;
-        btn.textContent = `再次點擊確認重設`;
-        return;
-      }
-      btn.dataset.armed = `false`;
-      btn.textContent = `重設個人偏好`;
+      // -------------------------------------------------------------------
+      // 5. 應用程式狀態管理與 LocalStorage 讀取
+      // -------------------------------------------------------------------
+      const STORAGE_KEYS = {
+        BOOKMARKS: 'baroque_tour_2027_bookmarks',
+        NOTES: 'baroque_tour_2027_notes',
+        CHECKLIST: 'baroque_tour_2027_checklist'
+      };
 
-      appState.flightPlan = `A`;
-      appState.bookmarks = [];
-      selectFlightPlan(`A`);
-      buildSteps();
-      initScrolly();
-      updateNotebookView();
-      saveState();
-
-      const status = document.getElementById(`notebook-status`);
-      if (status) status.textContent = `已重設為預設方案 A 與空白收藏清單。`;
-    }
-
-    // ── Boot sequence ──
-    async function initApp() {
-      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+      function loadJSON(key, fallback) {
         try {
-          const saved = await window.notebookAppApi.getAppState();
-          if (saved) {
-            if (saved.flightPlan === `A` || saved.flightPlan === `B`) {
-              appState.flightPlan = saved.flightPlan;
-            }
-            if (Array.isArray(saved.bookmarks)) {
-              appState.bookmarks = saved.bookmarks.filter(n => Number.isInteger(n) && n >= 1 && n <= 9);
-            }
-          }
+          const raw = localStorage.getItem(key);
+          return raw ? JSON.parse(raw) : fallback;
         } catch (e) {
-          // Proceed with defaults
+          return fallback;
         }
       }
 
-      buildSteps();
-      initMap();
-      initScrolly();
-      selectFlightPlan(appState.flightPlan);
-      renderTrail();
-      renderHeritage(`all`);
-      renderStayFood(`all`);
-      updateNotebookView();
-
-      if (window.lucide && typeof window.lucide.createIcons === `function`) {
-        window.lucide.createIcons();
+      function saveJSON(key, value) {
+        try {
+          localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+          // 忽略無痕模式儲存限制
+        }
       }
 
-      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
-        window.notebookAppApi.notifyAppReady();
-      }
-    }
+      const state = {
+        activeTab: 'itinerary',
+        viewMode: 'all',          // 'all' | 'single'
+        focusedDay: 1,            // 1..9
+        themeFilter: 'all',       // 'all' | 'mountain' | 'watertown' | 'commerce' | 'bookmarked'
+        bookmarks: loadJSON(STORAGE_KEYS.BOOKMARKS, []),
+        notes: loadJSON(STORAGE_KEYS.NOTES, {}),
+        openNoteDays: {},         // 控制哪幾天的筆記輸入框展開
+        flightView: 'compare',    // 'compare' | 'A' | 'B'
+        selectedNodeId: 'huangshan',
+        checklist: loadJSON(STORAGE_KEYS.CHECKLIST, DEFAULT_CHECKLIST)
+      };
 
-    document.addEventListener(`DOMContentLoaded`, initApp);
+      // -------------------------------------------------------------------
+      // 6. 輔助功能：Toast 提示框與每日精緻水墨建築 SVG 圖示
+      // -------------------------------------------------------------------
+      function showToast(message) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'pointer-events-auto flex items-center gap-2 rounded-full bg-ink px-4 py-2 text-xs sm:text-sm font-medium text-white shadow-lg transition-all duration-300 opacity-0 translate-y-2';
+        toast.innerHTML = `<span class="h-2 w-2 rounded-full bg-bronze"></span><span>${message}</span>`;
+        container.appendChild(toast);
+
+        requestAnimationFrame(() => {
+          toast.classList.remove('opacity-0', 'translate-y-2');
+        });
+
+        setTimeout(() => {
+          toast.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => toast.remove(), 300);
+        }, 2400);
+      }
+
+      // 根據每日主題產生專屬雜誌風精緻 SVG 小插畫
+      function getDayMotifSVG(motif) {
+        const svgBase = 'class="h-14 w-20 shrink-0 text-mist/80" viewBox="0 0 120 80" fill="none"';
+        switch (motif) {
+          case 'bund':
+            // 外灘天際線與黃浦江波紋
+            return `<svg ${svgBase}><path d="M12 60 H108" stroke="#B8860B" stroke-width="1.5"/><rect x="22" y="34" width="14" height="26" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M22 34 L29 26 L36 34" stroke="currentColor" stroke-width="1.5"/><rect x="44" y="24" width="16" height="36" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="82" cy="36" r="6" stroke="#B8860B" stroke-width="1.5"/><path d="M82 12 V30 M82 42 V60" stroke="#B8860B" stroke-width="1.5"/><path d="M18 68 Q45 64 72 68 T106 68" stroke="currentColor" stroke-opacity="0.45" stroke-width="1.2"/></svg>`;
+          case 'pavilion':
+            // 寧波天一閣古典書樓飛簷與水池
+            return `<svg ${svgBase}><path d="M20 34 Q60 22 100 34" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M28 46 Q60 36 92 46" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M36 46 V62 M84 46 V62 M52 46 V62 M68 46 V62" stroke="currentColor" stroke-width="1.4"/><path d="M16 64 H104" stroke="#B8860B" stroke-width="1.5"/><path d="M26 70 Q60 66 94 70" stroke="currentColor" stroke-opacity="0.4" stroke-width="1.2"/></svg>`;
+          case 'westlake':
+            // 西湖斷橋殘雪與垂柳意象
+            return `<svg ${svgBase}><path d="M15 58 Q60 32 105 58" stroke="currentColor" stroke-width="1.8"/><path d="M15 62 H105" stroke="#B8860B" stroke-width="1.3"/><path d="M24 18 Q32 32 26 48 M32 16 Q42 30 35 45" stroke="currentColor" stroke-opacity="0.6" stroke-width="1.2"/><circle cx="84" cy="24" r="7" stroke="#B8860B" stroke-opacity="0.7" stroke-width="1.3"/></svg>`;
+          case 'huizhou':
+            // 徽州馬頭牆與牌坊剪影
+            return `<svg ${svgBase}><path d="M20 62 V38 H32 V30 H46 V22 H74 V30 H88 V38 H100 V62" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><rect x="52" y="42" width="16" height="20" stroke="#B8860B" stroke-width="1.4"/><path d="M14 62 H106" stroke="currentColor" stroke-width="1.5"/></svg>`;
+          case 'huangshan':
+            // 黃山奇峰、雲海與迎客松
+            return `<svg ${svgBase}><path d="M14 62 L40 22 L62 50 L82 28 L106 62" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 56 Q38 48 64 56 T110 54" stroke="#B8860B" stroke-width="1.5"/><path d="M76 34 C86 30 94 31 100 34" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+          case 'wangxian':
+            // 望仙谷懸崖閣樓與瀑布燈火
+            return `<svg ${svgBase}><path d="M18 16 L46 64 H14 Z" stroke="currentColor" stroke-width="1.5"/><rect x="44" y="28" width="24" height="16" stroke="#B8860B" stroke-width="1.5"/><path d="M40 28 L56 20 L72 28" stroke="#B8860B" stroke-width="1.5"/><path d="M84 22 V62 M90 26 V62" stroke="currentColor" stroke-opacity="0.55" stroke-width="1.3" stroke-dasharray="4 3"/></svg>`;
+          case 'quzhou':
+            // 衢州水亭門古城樓與石窟拱門
+            return `<svg ${svgBase}><path d="M22 62 V36 H98 V62" stroke="currentColor" stroke-width="1.6"/><path d="M50 62 V48 A10 10 0 0 1 70 48 V62" stroke="#B8860B" stroke-width="1.6"/><path d="M32 36 L40 24 H80 L88 36" stroke="currentColor" stroke-width="1.5"/></svg>`;
+          case 'yiwu':
+            // 義烏全球貿易經緯地球儀與商貿紐帶
+            return `<svg ${svgBase}><circle cx="60" cy="40" r="22" stroke="currentColor" stroke-width="1.5"/><ellipse cx="60" cy="40" rx="10" ry="22" stroke="#B8860B" stroke-width="1.3"/><path d="M38 40 H82 M42 30 H78 M42 50 H78" stroke="currentColor" stroke-opacity="0.5" stroke-width="1.1"/></svg>`;
+          default:
+            // 烏鎮江南水鄉石拱橋與搖櫓船
+            return `<svg ${svgBase}><path d="M18 56 Q60 28 102 56" stroke="currentColor" stroke-width="1.8"/><path d="M42 56 A18 16 0 0 1 78 56" stroke="#B8860B" stroke-width="1.5"/><path d="M14 62 Q42 58 70 62 T108 62" stroke="currentColor" stroke-opacity="0.6" stroke-width="1.3"/></svg>`;
+        }
+      }
+
+      // -------------------------------------------------------------------
+      // 7. 分頁導覽切換邏輯
+      // -------------------------------------------------------------------
+      const tabButtons = document.querySelectorAll('.nav-tab-btn');
+      const tabPanels = {
+        itinerary: document.getElementById('panel-itinerary'),
+        culture: document.getElementById('panel-culture'),
+        logistics: document.getElementById('panel-logistics'),
+        prep: document.getElementById('panel-prep')
+      };
+
+      function switchTab(targetTab, scrollToNav = true) {
+        state.activeTab = targetTab;
+        tabButtons.forEach((btn) => {
+          const isMatch = btn.dataset.tab === targetTab;
+          btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+          if (isMatch) {
+            btn.className = 'nav-tab-btn active flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 bg-ink text-white shadow-sm';
+          } else {
+            btn.className = 'nav-tab-btn flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-inkLight hover:bg-paperDark hover:text-ink transition-all duration-200';
+          }
+        });
+
+        Object.entries(tabPanels).forEach(([key, panel]) => {
+          if (key === targetTab) {
+            panel.classList.remove('hidden');
+            panel.classList.add('block');
+          } else {
+            panel.classList.add('hidden');
+            panel.classList.remove('block');
+          }
+        });
+
+        if (scrollToNav) {
+          const navEl = document.getElementById('sticky-nav');
+          const navTop = navEl.getBoundingClientRect().top + window.scrollY;
+          if (window.scrollY > navTop) {
+            window.scrollTo({ top: navTop - 4, behavior: 'smooth' });
+          }
+        }
+      }
+
+      tabButtons.forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab, true));
+      });
+
+      // -------------------------------------------------------------------
+      // 8. 分頁一：每日詳細行程渲染與互動（篩選、單日焦點、收藏與筆記）
+      // -------------------------------------------------------------------
+      const itineraryListEl = document.getElementById('itinerary-list');
+      const dayJumpContainerEl = document.getElementById('day-jump-container');
+      const bookmarkCountEl = document.getElementById('bookmark-count');
+      const singleDayControlsEl = document.getElementById('single-day-controls');
+      const singleDayIndicatorEl = document.getElementById('single-day-indicator');
+
+      function updateBookmarkBadge() {
+        bookmarkCountEl.textContent = state.bookmarks.length;
+      }
+
+      function renderDayJumpButtons() {
+        dayJumpContainerEl.innerHTML = ITINERARY_DATA.map((item) => {
+          const isActiveSingle = state.viewMode === 'single' && state.focusedDay === item.day;
+          const isBookmarked = state.bookmarks.includes(item.day);
+          return `
+            <button
+              type="button"
+              data-jump-day="${item.day}"
+              class="jump-day-btn shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-medium transition ${
+                isActiveSingle
+                  ? 'bg-ink text-white shadow-sm'
+                  : 'bg-paperDark text-inkLight hover:bg-mistLight hover:text-mist'
+              }"
+            >
+              Day ${item.day}${isBookmarked ? ' ★' : ''}
+            </button>
+          `;
+        }).join('');
+
+        dayJumpContainerEl.querySelectorAll('.jump-day-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const targetDay = Number(btn.dataset.jumpDay);
+            if (state.viewMode === 'single') {
+              state.focusedDay = targetDay;
+              renderItinerary();
+              renderDayJumpButtons();
+            } else {
+              // 若目前篩選看不到該天，自動重設為全部行程並滾動至該日卡片
+              if (state.themeFilter !== 'all') {
+                state.themeFilter = 'all';
+                updateFilterButtonsUI();
+                renderItinerary();
+              }
+              const cardEl = document.getElementById(`day-card-${targetDay}`);
+              if (cardEl) {
+                const yOffset = -76;
+                const y = cardEl.getBoundingClientRect().top + window.scrollY + yOffset;
+                window.scrollTo({ top: y, behavior: 'smooth' });
+              }
+            }
+          });
+        });
+      }
+
+      function updateFilterButtonsUI() {
+        document.querySelectorAll('.filter-btn').forEach((btn) => {
+          const isMatch = btn.dataset.filter === state.themeFilter;
+          if (isMatch) {
+            btn.className = 'filter-btn active rounded-full bg-mist px-3.5 py-1.5 text-xs font-medium text-white shadow-sm transition';
+          } else {
+            btn.className = 'filter-btn rounded-full bg-paperDark px-3.5 py-1.5 text-xs font-medium text-inkLight hover:bg-mistLight hover:text-mist transition';
+          }
+        });
+      }
+
+      function renderItinerary() {
+        updateBookmarkBadge();
+
+        // 決定要顯示的資料清單
+        let visibleDays = ITINERARY_DATA;
+
+        if (state.viewMode === 'single') {
+          singleDayControlsEl.classList.remove('hidden');
+          singleDayControlsEl.classList.add('flex');
+          singleDayIndicatorEl.textContent = `第 ${state.focusedDay} 天（${ITINERARY_DATA[state.focusedDay - 1].date}） / 共 9 天`;
+          document.getElementById('btn-prev-day').disabled = state.focusedDay === 1;
+          document.getElementById('btn-next-day').disabled = state.focusedDay === 9;
+          visibleDays = ITINERARY_DATA.filter((d) => d.day === state.focusedDay);
+        } else {
+          singleDayControlsEl.classList.add('hidden');
+          singleDayControlsEl.classList.remove('flex');
+
+          if (state.themeFilter === 'bookmarked') {
+            visibleDays = ITINERARY_DATA.filter((d) => state.bookmarks.includes(d.day));
+          } else if (state.themeFilter !== 'all') {
+            visibleDays = ITINERARY_DATA.filter((d) => d.themes.includes(state.themeFilter));
+          }
+        }
+
+        if (visibleDays.length === 0) {
+          itineraryListEl.innerHTML = `
+            <div class="rounded-2xl border border-dashed border-ink/20 bg-white p-10 text-center">
+              <p class="font-serif text-lg font-bold text-ink">目前尚無符合此篩選條件的行程卡片</p>
+              <p class="mt-1 text-sm text-inkLight">您可以點擊行程卡片右上角的「☆ 收藏亮點」將喜愛的日子加入收藏。</p>
+              <button type="button" id="btn-clear-filter" class="mt-4 rounded-xl bg-mist px-4 py-2 text-xs font-medium text-white hover:bg-ink transition">
+                檢視全部 9 天行程
+              </button>
+            </div>
+          `;
+          const clearBtn = document.getElementById('btn-clear-filter');
+          if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+              state.themeFilter = 'all';
+              updateFilterButtonsUI();
+              renderItinerary();
+            });
+          }
+          return;
+        }
+
+        itineraryListEl.innerHTML = visibleDays.map((item) => {
+          const isBookmarked = state.bookmarks.includes(item.day);
+          const noteText = state.notes[item.day] || '';
+          const isNoteOpen = Boolean(state.openNoteDays[item.day]) || noteText.trim().length > 0;
+
+          const routeHTML = item.route.map((stop, idx) => {
+            const isLast = idx === item.route.length - 1;
+            return `<span class="font-serif text-lg sm:text-xl font-bold text-ink">${stop}</span>${
+              !isLast ? '<span class="mx-1.5 font-sans text-base font-normal text-bronze">➔</span>' : ''
+            }`;
+          }).join('');
+
+          const badgesHTML = item.themeLabels.map((lbl) => `
+            <span class="rounded-md bg-paperDark px-2.5 py-0.5 text-[11px] font-medium text-inkLight">${lbl}</span>
+          `).join('');
+
+          return `
+            <article id="day-card-${item.day}" class="overflow-hidden rounded-3xl border ${isBookmarked ? 'border-bronze/60 ring-1 ring-bronze/20' : 'border-ink/10'} bg-white shadow-editorial transition-all duration-300 hover:shadow-editorialHover">
+              <!-- 卡片頂部色條與日期資訊列 -->
+              <div class="flex flex-wrap items-center justify-between gap-3 border-b border-ink/10 bg-gradient-to-r from-[#F5F2EB] to-white px-5 py-4 sm:px-7">
+                <div class="flex flex-wrap items-center gap-2.5">
+                  <span class="inline-flex items-center rounded-xl bg-ink px-3.5 py-1 font-serif text-sm font-bold text-white shadow-sm">
+                    第 ${item.day} 天
+                  </span>
+                  <span class="font-serif text-sm sm:text-base font-semibold text-mist">${item.date}</span>
+                  <span class="rounded-full border border-mist/25 bg-mistLight/70 px-3 py-0.5 text-xs font-medium text-mist">
+                    ${item.region}
+                  </span>
+                  <div class="hidden sm:flex items-center gap-1.5 ml-1">${badgesHTML}</div>
+                </div>
+
+                <!-- 互動功能鈕：收藏亮點 & 隨手筆記 -->
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    data-bookmark-day="${item.day}"
+                    class="bookmark-btn inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition ${
+                      isBookmarked
+                        ? 'border-bronze bg-bronzeLight text-bronze font-semibold'
+                        : 'border-ink/15 bg-white text-inkLight hover:border-bronze hover:text-bronze'
+                    }"
+                  >
+                    <span>${isBookmarked ? '★ 已收藏亮點' : '☆ 收藏亮點'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    data-toggle-note="${item.day}"
+                    class="toggle-note-btn inline-flex items-center gap-1.5 rounded-xl border border-ink/15 bg-white px-3 py-1.5 text-xs font-medium text-inkLight hover:border-mist hover:text-mist transition"
+                  >
+                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>${noteText.trim() ? '編輯筆記' : '隨手筆記'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 卡片主體內容 -->
+              <div class="p-5 sm:p-7">
+                <!-- 路線標題與水墨建築微插畫 -->
+                <div class="flex items-start justify-between gap-4">
+                  <div class="leading-snug">${routeHTML}</div>
+                  <div class="hidden sm:block">${getDayMotifSVG(item.motif)}</div>
+                </div>
+
+                <!-- 詳細行程文字 -->
+                <p class="mt-4 text-sm sm:text-base leading-relaxed text-inkLight">
+                  ${item.description}
+                </p>
+
+                <!-- 景點亮點引用框（Blockquote 雜誌排版） -->
+                <blockquote class="editorial-quote mt-5 rounded-r-2xl p-4 sm:p-5">
+                  <div class="mb-1 flex items-center gap-1.5 font-serif text-xs sm:text-sm font-bold tracking-wider text-bronze">
+                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span>景點亮點導覽</span>
+                  </div>
+                  <p class="text-xs sm:text-sm leading-relaxed text-ink">
+                    ${item.highlight}
+                  </p>
+                </blockquote>
+
+                <!-- 餐食與下榻住宿資訊網格 -->
+                <div class="mt-5 grid grid-cols-1 gap-3 rounded-2xl bg-paper p-4 sm:grid-cols-12">
+                  <!-- 三餐安排（佔 7 欄） -->
+                  <div class="sm:col-span-7 flex flex-col justify-center space-y-1.5 border-b border-ink/10 pb-3 sm:border-b-0 sm:border-r sm:pb-0 sm:pr-4">
+                    <div class="flex items-center gap-1.5 text-xs font-bold tracking-wider text-mist">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      <span>當日餐食安排</span>
+                    </div>
+                    <div class="grid grid-cols-1 gap-1 text-xs sm:text-sm text-inkLight">
+                      <div><span class="font-semibold text-ink">早餐：</span>${item.meals.breakfast}</div>
+                      <div><span class="font-semibold text-ink">午餐：</span>${item.meals.lunch}</div>
+                      <div><span class="font-semibold text-ink">晚餐：</span>${item.meals.dinner}</div>
+                    </div>
+                  </div>
+
+                  <!-- 下榻飯店（佔 5 欄） -->
+                  <div class="sm:col-span-5 flex flex-col justify-center sm:pl-2">
+                    <div class="flex items-center gap-1.5 text-xs font-bold tracking-wider text-bronze">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                      <span>下榻精選住宿</span>
+                    </div>
+                    <div class="mt-1.5 font-serif text-sm sm:text-base font-bold text-ink">
+                      ${item.hotel}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 個人隨手筆記折疊區 -->
+                <div id="note-box-${item.day}" class="${isNoteOpen ? 'block' : 'hidden'} mt-4 rounded-2xl border border-bronze/30 bg-bronzeLight/35 p-4">
+                  <div class="mb-2 flex items-center justify-between">
+                    <label for="note-input-${item.day}" class="text-xs font-bold text-ink">
+                      第 ${item.day} 天 個人隨手筆記（自動儲存於本機）
+                    </label>
+                    <span id="note-saved-badge-${item.day}" class="text-[11px] font-medium text-mist opacity-0 transition-opacity">✓ 已自動儲存</span>
+                  </div>
+                  <textarea
+                    id="note-input-${item.day}"
+                    data-note-day="${item.day}"
+                    rows="2"
+                    placeholder="記錄想買的伴手禮、集合時間提醒或攝影筆記..."
+                    class="day-note-textarea w-full rounded-xl border border-ink/15 bg-white p-3 text-xs sm:text-sm text-ink placeholder:text-inkLight/50 focus:border-bronze focus:outline-none"
+                  >${noteText}</textarea>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join('');
+
+        // 綁定卡片內動態事件
+        bindItineraryCardEvents();
+      }
+
+      function bindItineraryCardEvents() {
+        // 收藏按鈕
+        document.querySelectorAll('.bookmark-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const day = Number(btn.dataset.bookmarkDay);
+            const idx = state.bookmarks.indexOf(day);
+            if (idx === -1) {
+              state.bookmarks.push(day);
+              state.bookmarks.sort((a, b) => a - b);
+              showToast(`已收藏第 ${day} 天行程亮點`);
+            } else {
+              state.bookmarks.splice(idx, 1);
+              showToast(`已取消收藏第 ${day} 天`);
+            }
+            saveJSON(STORAGE_KEYS.BOOKMARKS, state.bookmarks);
+            renderItinerary();
+            renderDayJumpButtons();
+          });
+        });
+
+        // 筆記展開/收合按鈕
+        document.querySelectorAll('.toggle-note-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const day = Number(btn.dataset.toggleNote);
+            const box = document.getElementById(`note-box-${day}`);
+            if (box) {
+              const willOpen = box.classList.contains('hidden');
+              state.openNoteDays[day] = willOpen;
+              box.classList.toggle('hidden');
+              if (willOpen) {
+                const textarea = document.getElementById(`note-input-${day}`);
+                if (textarea) textarea.focus();
+              }
+            }
+          });
+        });
+
+        // 筆記即時自動儲存
+        document.querySelectorAll('.day-note-textarea').forEach((textarea) => {
+          textarea.addEventListener('input', (e) => {
+            const day = Number(e.target.dataset.noteDay);
+            state.notes[day] = e.target.value;
+            saveJSON(STORAGE_KEYS.NOTES, state.notes);
+
+            const badge = document.getElementById(`note-saved-badge-${day}`);
+            if (badge) {
+              badge.classList.remove('opacity-0');
+              clearTimeout(badge._timer);
+              badge._timer = setTimeout(() => badge.classList.add('opacity-0'), 1400);
+            }
+          });
+        });
+      }
+
+      // 綁定主題篩選按鈕
+      document.querySelectorAll('.filter-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.themeFilter = btn.dataset.filter;
+          // 若處於單日焦點模式，切換篩選時自動切回全部展開模式以顯示篩選結果
+          if (state.viewMode === 'single') {
+            state.viewMode = 'all';
+            updateModeButtonsUI();
+          }
+          updateFilterButtonsUI();
+          renderItinerary();
+          renderDayJumpButtons();
+        });
+      });
+
+      // 瀏覽模式切換（全部展開 vs 單日焦點模式）
+      function updateModeButtonsUI() {
+        const btnAll = document.getElementById('btn-mode-all');
+        const btnSingle = document.getElementById('btn-mode-single');
+        if (state.viewMode === 'all') {
+          btnAll.className = 'mode-btn rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition';
+          btnSingle.className = 'mode-btn rounded-lg px-3 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition';
+        } else {
+          btnSingle.className = 'mode-btn rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-ink shadow-sm transition';
+          btnAll.className = 'mode-btn rounded-lg px-3 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition';
+        }
+      }
+
+      document.getElementById('btn-mode-all').addEventListener('click', () => {
+        state.viewMode = 'all';
+        updateModeButtonsUI();
+        renderItinerary();
+        renderDayJumpButtons();
+      });
+
+      document.getElementById('btn-mode-single').addEventListener('click', () => {
+        state.viewMode = 'single';
+        updateModeButtonsUI();
+        renderItinerary();
+        renderDayJumpButtons();
+      });
+
+      document.getElementById('btn-prev-day').addEventListener('click', () => {
+        if (state.focusedDay > 1) {
+          state.focusedDay -= 1;
+          renderItinerary();
+          renderDayJumpButtons();
+        }
+      });
+
+      document.getElementById('btn-next-day').addEventListener('click', () => {
+        if (state.focusedDay < 9) {
+          state.focusedDay += 1;
+          renderItinerary();
+          renderDayJumpButtons();
+        }
+      });
+
+      // 複製所有個人筆記至剪貼簿（採用相容 iFrame 的 document.execCommand('copy')）
+      document.getElementById('btn-copy-notes').addEventListener('click', () => {
+        const entries = Object.entries(state.notes).filter(([, val]) => val && val.trim().length > 0);
+        if (entries.length === 0) {
+          showToast('您目前尚未寫下任何隨手筆記喔！');
+          return;
+        }
+        const formatted = [
+          '【巴洛克之友：滬浙皖贛九日遊 · 我的行程筆記】',
+          ...entries.map(([d, text]) => `● 第 ${d} 天（${ITINERARY_DATA[Number(d) - 1].date}）：${text.trim()}`)
+        ].join('\n');
+
+        const tempArea = document.createElement('textarea');
+        tempArea.value = formatted;
+        tempArea.style.position = 'fixed';
+        tempArea.style.left = '-9999px';
+        document.body.appendChild(tempArea);
+        tempArea.select();
+        try {
+          document.execCommand('copy');
+          showToast('已將您的所有行程筆記複製到剪貼簿！');
+        } catch (err) {
+          showToast('複製失敗，請手動選取文字複製');
+        }
+        document.body.removeChild(tempArea);
+      });
+
+      // -------------------------------------------------------------------
+      // 9. 分頁二：互動 SVG 順時針路線圖渲染與節點點擊切換
+      // -------------------------------------------------------------------
+      const mapNodesLayerEl = document.getElementById('map-nodes-layer');
+      const mapDetailCardEl = document.getElementById('map-detail-card');
+
+      function getCategoryColor(cat) {
+        if (cat === 'mountain') return '#2D5A4C';
+        if (cat === 'watertown') return '#B8860B';
+        return '#1B2A2F';
+      }
+
+      function renderRouteMap() {
+        const svgNS = 'http://www.w3.org/2000/svg';
+        mapNodesLayerEl.innerHTML = '';
+
+        MAP_NODES.forEach((node) => {
+          const isSelected = node.id === state.selectedNodeId;
+          const color = getCategoryColor(node.category);
+
+          const group = document.createElementNS(svgNS, 'g');
+          group.setAttribute('class', 'cursor-pointer');
+          group.setAttribute('role', 'button');
+          group.setAttribute('tabindex', '0');
+          group.setAttribute('aria-label', `${node.name}（${node.dayLabel}）`);
+
+          // 擴大觸控點擊熱區（方便手機手指點擊）
+          const hitCircle = document.createElementNS(svgNS, 'circle');
+          hitCircle.setAttribute('cx', node.x);
+          hitCircle.setAttribute('cy', node.y);
+          hitCircle.setAttribute('r', '22');
+          hitCircle.setAttribute('fill', 'transparent');
+          group.appendChild(hitCircle);
+
+          // 選取狀態呼吸光暈圈
+          if (isSelected) {
+            const pulse = document.createElementNS(svgNS, 'circle');
+            pulse.setAttribute('cx', node.x);
+            pulse.setAttribute('cy', node.y);
+            pulse.setAttribute('r', '14');
+            pulse.setAttribute('fill', '#9E3B33');
+            pulse.setAttribute('class', 'node-pulse');
+            group.appendChild(pulse);
+          }
+
+          // 節點外圓環
+          const circle = document.createElementNS(svgNS, 'circle');
+          circle.setAttribute('cx', node.x);
+          circle.setAttribute('cy', node.y);
+          circle.setAttribute('r', isSelected ? '9' : '6.5');
+          circle.setAttribute('fill', isSelected ? '#9E3B33' : color);
+          circle.setAttribute('stroke', '#FFFFFF');
+          circle.setAttribute('stroke-width', isSelected ? '2.5' : '2');
+          circle.setAttribute('filter', 'url(#softShadow)');
+          group.appendChild(circle);
+
+          // 節點標籤定位微調（避免文字重疊）
+          let labelX = node.x;
+          let labelY = node.y - 12;
+          let anchor = 'middle';
+
+          if (node.id === 'pudong') { labelX = node.x + 12; labelY = node.y + 4; anchor = 'start'; }
+          if (node.id === 'shanghai') { labelX = node.x - 10; labelY = node.y - 12; anchor = 'end'; }
+          if (node.id === 'bridge') { labelX = node.x + 12; labelY = node.y + 4; anchor = 'start'; }
+          if (node.id === 'ningbo') { labelX = node.x + 12; labelY = node.y + 6; anchor = 'start'; }
+          if (node.id === 'shaoxing') { labelX = node.x; labelY = node.y + 20; anchor = 'middle'; }
+          if (node.id === 'hangzhou') { labelX = node.x - 10; labelY = node.y - 11; anchor = 'end'; }
+          if (node.id === 'huizhou') { labelX = node.x - 12; labelY = node.y - 8; anchor = 'end'; }
+          if (node.id === 'huangshan') { labelX = node.x - 12; labelY = node.y + 6; anchor = 'end'; }
+          if (node.id === 'sanqingshan') { labelX = node.x - 12; labelY = node.y + 4; anchor = 'end'; }
+          if (node.id === 'wangxian') { labelX = node.x; labelY = node.y + 21; anchor = 'middle'; }
+          if (node.id === 'quzhou') { labelX = node.x; labelY = node.y + 21; anchor = 'middle'; }
+          if (node.id === 'longyou') { labelX = node.x + 12; labelY = node.y + 12; anchor = 'start'; }
+          if (node.id === 'yiwu') { labelX = node.x + 12; labelY = node.y + 5; anchor = 'start'; }
+          if (node.id === 'wuzhen') { labelX = node.x - 12; labelY = node.y + 2; anchor = 'end'; }
+
+          const text = document.createElementNS(svgNS, 'text');
+          text.setAttribute('x', labelX);
+          text.setAttribute('y', labelY);
+          text.setAttribute('text-anchor', anchor);
+          text.setAttribute('font-family', 'Noto Sans TC, sans-serif');
+          text.setAttribute('font-size', isSelected ? '13' : '11.5');
+          text.setAttribute('font-weight', isSelected ? '700' : '600');
+          text.setAttribute('fill', isSelected ? '#9E3B33' : '#1B2A2F');
+          text.textContent = node.name;
+          group.appendChild(text);
+
+          group.addEventListener('click', () => {
+            state.selectedNodeId = node.id;
+            renderRouteMap();
+          });
+
+          mapNodesLayerEl.appendChild(group);
+        });
+
+        // 更新右側節點詳情閱讀卡
+        const activeNode = MAP_NODES.find((n) => n.id === state.selectedNodeId) || MAP_NODES[0];
+        const primaryDay = activeNode.days[0];
+        const categoryNames = { mountain: '名山勝境', watertown: '水鄉古城', commerce: '商業都會' };
+
+        mapDetailCardEl.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="rounded-full bg-mistLight px-3 py-1 text-xs font-bold text-mist">${activeNode.dayLabel}</span>
+            <span class="text-xs font-medium text-bronze">${categoryNames[activeNode.category]}</span>
+          </div>
+          <h3 class="mt-3 font-serif text-2xl font-bold text-ink">${activeNode.name}</h3>
+          <p class="mt-1 text-xs font-medium text-inkLight">地理位置：${activeNode.province}</p>
+          <p class="mt-4 text-sm leading-relaxed text-inkLight">
+            ${activeNode.summary}
+          </p>
+          <div class="mt-6 flex flex-wrap items-center gap-2.5 border-t border-ink/10 pt-4">
+            <button
+              type="button"
+              id="btn-map-jump-day"
+              class="inline-flex items-center gap-1.5 rounded-xl bg-ink px-4 py-2 text-xs sm:text-sm font-medium text-white shadow-sm hover:bg-mist transition"
+            >
+              <span>查看第 ${primaryDay} 天完整行程 →</span>
+            </button>
+          </div>
+        `;
+
+        document.getElementById('btn-map-jump-day').addEventListener('click', () => {
+          switchTab('itinerary', true);
+          state.viewMode = 'single';
+          state.focusedDay = primaryDay;
+          updateModeButtonsUI();
+          renderItinerary();
+          renderDayJumpButtons();
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 10. 分頁三：航班比較切換與精選住宿列表渲染
+      // -------------------------------------------------------------------
+      document.querySelectorAll('.flight-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          state.flightView = btn.dataset.flight;
+          document.querySelectorAll('.flight-btn').forEach((b) => {
+            if (b.dataset.flight === state.flightView) {
+              b.className = 'flight-btn active rounded-lg bg-white px-3.5 py-1.5 text-xs font-semibold text-ink shadow-sm transition';
+            } else {
+              b.className = 'flight-btn rounded-lg px-3.5 py-1.5 text-xs font-medium text-inkLight hover:text-ink transition';
+            }
+          });
+
+          const grid = document.getElementById('flight-cards-grid');
+          const cardA = document.getElementById('flight-card-A');
+          const cardB = document.getElementById('flight-card-B');
+
+          if (state.flightView === 'compare') {
+            grid.className = 'grid grid-cols-1 gap-6 lg:grid-cols-2';
+            cardA.classList.remove('hidden');
+            cardB.classList.remove('hidden');
+          } else if (state.flightView === 'A') {
+            grid.className = 'grid grid-cols-1 gap-6 max-w-2xl mx-auto';
+            cardA.classList.remove('hidden');
+            cardB.classList.add('hidden');
+          } else {
+            grid.className = 'grid grid-cols-1 gap-6 max-w-2xl mx-auto';
+            cardA.classList.add('hidden');
+            cardB.classList.remove('hidden');
+          }
+        });
+      });
+
+      function renderHotels() {
+        const hotelsGridEl = document.getElementById('hotels-grid');
+        hotelsGridEl.innerHTML = HOTELS_DATA.map((hotel) => `
+          <div class="flex flex-col justify-between rounded-2xl border ${
+            hotel.highlight ? 'border-bronze/50 bg-gradient-to-b from-bronzeLight/35 to-white' : 'border-ink/10 bg-white'
+          } p-5 sm:p-6 shadow-editorial transition-all hover:-translate-y-0.5 hover:shadow-editorialHover">
+            <div>
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="rounded-lg ${hotel.highlight ? 'bg-bronze text-white' : 'bg-ink text-white'} px-2.5 py-1 text-xs font-bold">
+                  ${hotel.nights}
+                </span>
+                <span class="text-xs font-medium text-mist">${hotel.city}</span>
+              </div>
+              <h3 class="mt-3 font-serif text-lg sm:text-xl font-bold text-ink">${hotel.name}</h3>
+              <div class="mt-1.5 inline-block rounded-md bg-paperDark px-2.5 py-0.5 text-[11px] font-medium text-inkLight">
+                ${hotel.tag}
+              </div>
+              <p class="mt-3 text-xs sm:text-sm leading-relaxed text-inkLight">
+                ${hotel.desc}
+              </p>
+            </div>
+            <div class="mt-5 border-t border-ink/10 pt-3">
+              <button
+                type="button"
+                data-hotel-day="${hotel.dayRef}"
+                class="hotel-jump-btn text-xs font-semibold text-mist hover:text-bronze transition"
+              >
+                前往第 ${hotel.dayRef} 天行程細節 →
+              </button>
+            </div>
+          </div>
+        `).join('');
+
+        hotelsGridEl.querySelectorAll('.hotel-jump-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const targetDay = Number(btn.dataset.hotelDay);
+            switchTab('itinerary', true);
+            state.viewMode = 'single';
+            state.focusedDay = targetDay;
+            updateModeButtonsUI();
+            renderItinerary();
+            renderDayJumpButtons();
+          });
+        });
+      }
+
+      // -------------------------------------------------------------------
+      // 11. 分頁四：互動式行前準備檢查表（Packing Checklist）
+      // -------------------------------------------------------------------
+      const checklistGridEl = document.getElementById('checklist-grid');
+      const progressTextEl = document.getElementById('checklist-progress-text');
+      const progressBarEl = document.getElementById('checklist-progress-bar');
+
+      function updateChecklistProgress() {
+        const total = state.checklist.length;
+        const done = state.checklist.filter((item) => item.checked).length;
+        const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+        progressTextEl.textContent = `${done} / ${total} (${pct}%)`;
+        progressBarEl.style.width = `${pct}%`;
+      }
+
+      function renderChecklist() {
+        updateChecklistProgress();
+        const categories = ['證件與金融', '高山健行裝備', '春季洋蔥穿搭', '電子與個人用品'];
+
+        checklistGridEl.innerHTML = categories.map((cat) => {
+          const items = state.checklist.filter((i) => i.category === cat);
+          const itemsHTML = items.map((item) => `
+            <li class="flex items-center justify-between gap-2 rounded-xl border border-ink/10 bg-paper px-3.5 py-2.5 transition hover:border-mist/40">
+              <label class="flex flex-1 cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  data-check-id="${item.id}"
+                  ${item.checked ? 'checked' : ''}
+                  class="checklist-checkbox mt-0.5 h-4 w-4 rounded border-ink/30 text-mist focus:ring-mist"
+                />
+                <span class="text-xs sm:text-sm leading-snug ${item.checked ? 'line-through text-inkLight/60' : 'text-ink'}">
+                  ${item.text}
+                </span>
+              </label>
+              ${
+                item.custom
+                  ? `<button type="button" data-del-id="${item.id}" class="del-check-btn rounded px-1.5 py-0.5 text-xs text-inkLight hover:bg-cinnabar/10 hover:text-cinnabar transition" title="刪除此自訂項目">✕</button>`
+                  : ''
+              }
+            </li>
+          `).join('');
+
+          return `
+            <div class="rounded-2xl border border-ink/10 bg-white p-4 sm:p-5">
+              <div class="mb-3 flex items-center justify-between">
+                <h3 class="font-serif text-base sm:text-lg font-bold text-ink">${cat}</h3>
+                <span class="rounded-full bg-paperDark px-2.5 py-0.5 text-xs font-medium text-inkLight">
+                  ${items.filter((i) => i.checked).length}/${items.length}
+                </span>
+              </div>
+              <ul class="space-y-2">${itemsHTML}</ul>
+            </div>
+          `;
+        }).join('');
+
+        // 勾選狀態變更
+        checklistGridEl.querySelectorAll('.checklist-checkbox').forEach((cb) => {
+          cb.addEventListener('change', (e) => {
+            const id = e.target.dataset.checkId;
+            const target = state.checklist.find((i) => i.id === id);
+            if (target) {
+              target.checked = e.target.checked;
+              saveJSON(STORAGE_KEYS.CHECKLIST, state.checklist);
+              renderChecklist();
+            }
+          });
+        });
+
+        // 刪除自訂項目
+        checklistGridEl.querySelectorAll('.del-check-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const id = btn.dataset.delId;
+            state.checklist = state.checklist.filter((i) => i.id !== id);
+            saveJSON(STORAGE_KEYS.CHECKLIST, state.checklist);
+            renderChecklist();
+            showToast('已移除自訂項目');
+          });
+        });
+      }
+
+      // 新增自訂打包項目
+      document.getElementById('add-checklist-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const inputEl = document.getElementById('new-item-input');
+        const categoryEl = document.getElementById('new-item-category');
+        const text = inputEl.value.trim();
+        if (!text) {
+          showToast('請輸入要新增的物品名稱');
+          return;
+        }
+        state.checklist.push({
+          id: 'custom_' + Date.now(),
+          category: categoryEl.value,
+          text,
+          checked: false,
+          custom: true
+        });
+        saveJSON(STORAGE_KEYS.CHECKLIST, state.checklist);
+        inputEl.value = '';
+        renderChecklist();
+        showToast(`已新增至「${categoryEl.value}」`);
+      });
+
+      // 恢復預設清單（內嵌二次確認按鈕，絕不使用 confirm()）
+      const resetWrapper = document.getElementById('reset-checklist-wrapper');
+      function bindResetButton() {
+        resetWrapper.innerHTML = `
+          <button type="button" id="btn-reset-prompt" class="rounded-lg border border-ink/15 px-3 py-1.5 text-xs font-medium text-inkLight hover:border-cinnabar hover:text-cinnabar transition">
+            恢復預設清單
+          </button>
+        `;
+        document.getElementById('btn-reset-prompt').addEventListener('click', () => {
+          resetWrapper.innerHTML = `
+            <span class="text-xs font-medium text-cinnabar">確定清除勾選並恢復預設？</span>
+            <button type="button" id="btn-reset-confirm" class="rounded-lg bg-cinnabar px-2.5 py-1 text-xs font-medium text-white hover:opacity-90">確定</button>
+            <button type="button" id="btn-reset-cancel" class="rounded-lg bg-paperDark px-2.5 py-1 text-xs font-medium text-inkLight hover:text-ink">取消</button>
+          `;
+          document.getElementById('btn-reset-confirm').addEventListener('click', () => {
+            state.checklist = DEFAULT_CHECKLIST.map((item) => ({ ...item }));
+            saveJSON(STORAGE_KEYS.CHECKLIST, state.checklist);
+            renderChecklist();
+            bindResetButton();
+            showToast('已恢復為預設打包清單');
+          });
+          document.getElementById('btn-reset-cancel').addEventListener('click', bindResetButton);
+        });
+      }
+      bindResetButton();
+
+      // -------------------------------------------------------------------
+      // 12. 返回頂部懸浮按鈕控制
+      // -------------------------------------------------------------------
+      const backToTopBtn = document.getElementById('btn-back-to-top');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 420) {
+          backToTopBtn.classList.remove('hidden');
+          backToTopBtn.classList.add('flex');
+        } else {
+          backToTopBtn.classList.add('hidden');
+          backToTopBtn.classList.remove('flex');
+        }
+      });
+
+      backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // -------------------------------------------------------------------
+      // 13. 初次啟動渲染所有分頁內容
+      // -------------------------------------------------------------------
+      renderDayJumpButtons();
+      renderItinerary();
+      renderRouteMap();
+      renderHotels();
+      renderChecklist();
+    });
   </script>
 </body>
 </html>
