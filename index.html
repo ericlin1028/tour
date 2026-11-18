@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="artifact-type" content="narrative">
+  <meta name="design-style" content="kiln">
+  <title>巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;600&family=Noto+Serif+TC:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600&family=Shippori+Mincho:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/lucide@1.43.0/dist/umd/lucide.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/scrollama@3.2.0/build/scrollama.min.js"></script>
+
+  <style>
+    :root {
+      color-scheme: light;
+
+      /* 1. Kiln style tokens */
+      --background: #f4f1ea;
+      --surface-container-low: #ebe6db;
+      --surface-container: #e3ddd0;
+      --surface-container-high: #d9d1c2;
+
+      --on-surface: #1c1b18;
+      --on-surface-variant: #5e5a51;
+
+      --outline: #1c1b18;
+      --outline-variant: #d2cbbd;
+
+      --primary: #1c1b18;
+      --on-primary: #f4f1ea;
+      --primary-container: #ebe6db;
+      --on-primary-container: #1c1b18;
+      --secondary: #4a5d46;
+      --tertiary: #9e3b2b;
+      --error: #9e2a22;
+      --on-error: #f4f1ea;
+
+      --data-1: #4a5d46;
+      --data-2: #9e3b2b;
+      --data-3: #1c1b18;
+      --data-4: #8a6f48;
+      --data-context: #c7bfb0;
+
+      /* Map harmonized tokens */
+      --map-ocean: #dce2de;
+      --map-land: #ebe6db;
+      --map-land-border: #aba393;
+
+      --font-headline: 'Shippori Mincho', 'Noto Serif TC', serif;
+      --font-body: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+      --font-label: 'Geist Mono', 'Noto Sans TC', monospace;
+
+      --rounded: 0.125rem;
+      --rounded-lg: 0.125rem;
+      --rounded-full: 0.125rem;
+
+      --rule-sumi-left: 2px solid var(--outline);
+      --rule-sumi: 1px solid var(--outline);
+      --rule-linen: 1px solid var(--outline-variant);
+      --label-tracking: 0.12em;
+
+      /* 3. Shared tokens */
+      --positive: #4a5d46;
+      --warning: #8a6f48;
+      --focus: #1c1b18;
+
+      --display-size: clamp(2.15rem, 1.35rem + 3vw, 3.65rem);
+      --headline-size: clamp(1.55rem, 1.2rem + 1.4vw, 2.25rem);
+      --subhead-size: clamp(1.125rem, 1.02rem + 0.45vw, 1.375rem);
+      --body-size: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+      --label-size: 0.75rem;
+
+      --space-xs: 0.25rem;
+      --space-sm: 0.5rem;
+      --space-md: 1rem;
+      --space-lg: 1.5rem;
+      --space-xl: 2.5rem;
+      --space-2xl: 4rem;
+      --space-3xl: 6rem;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+      --dur-micro: 120ms;
+      --dur-short: 220ms;
+      --dur-long: 420ms;
+    }
+
+    /* Base reset */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      overflow-x: clip;
+      margin: 0;
+      padding: 0;
+      background: var(--background);
+      color: var(--on-surface);
+      font-family: var(--font-body);
+      font-size: var(--body-size);
+      line-height: 1.65;
+      scroll-behavior: smooth;
+    }
+    header { position: static !important; }
+    button, input, select, textarea { font-family: inherit; }
+
+    /* Focus rings */
+    :focus-visible {
+      outline: 2px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    /* Layout containers — note overflow-x: clip only, never overflow: hidden on scrolly ancestors */
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 var(--space-lg);
+      overflow-x: clip;
+    }
+    .wrap * { min-width: 0; }
+
+    /* Hero Masthead */
+    .hero {
+      padding: var(--space-2xl) 0 var(--space-xl);
+      border-bottom: var(--rule-linen);
+      display: grid;
+      gap: var(--space-xl);
+    }
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-lg);
+    }
+    .hero-copy {
+      max-width: 68ch;
+      display: grid;
+      gap: var(--space-sm);
+    }
+    .kicker {
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: var(--label-size);
+      letter-spacing: var(--label-tracking);
+      color: var(--secondary);
+      text-transform: uppercase;
+    }
+    .display-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--display-size);
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .subhead-moss {
+      font-family: var(--font-headline);
+      font-weight: 500;
+      font-size: var(--subhead-size);
+      line-height: 1.45;
+      color: var(--secondary);
+      margin: var(--space-xs) 0 0;
+      max-width: 58ch;
+    }
+    .hero-meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+      margin-top: var(--space-sm);
+    }
+    .seal-stamp {
+      border: 1px solid var(--tertiary);
+      color: var(--tertiary);
+      font-family: var(--font-label);
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      padding: 0.5rem 0.4rem;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      flex-shrink: 0;
+      line-height: 1.2;
+      user-select: none;
+    }
+
+    /* Quick jump nav */
+    .section-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      padding: var(--space-md) 0;
+      border-bottom: var(--rule-linen);
+    }
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      background: var(--surface-container-low);
+      border: var(--rule-linen);
+      border-radius: var(--rounded);
+      color: var(--on-surface);
+      text-decoration: none;
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      letter-spacing: 0.04em;
+      transition: background-color var(--dur-short) var(--ease-out), border-color var(--dur-short) var(--ease-out);
+    }
+    .nav-link:hover {
+      background: var(--surface-container-high);
+      border-color: var(--outline);
+    }
+
+    /* Washi cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .washi-card {
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+      padding: var(--space-md) var(--space-lg);
+      display: grid;
+      gap: var(--space-xs);
+    }
+    .washi-card .label {
+      font-family: var(--font-label);
+      font-weight: 500;
+      font-size: var(--label-size);
+      color: var(--on-surface-variant);
+      letter-spacing: 0.06em;
+    }
+    .washi-card .value {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: clamp(1.35rem, 1.15rem + 0.8vw, 1.85rem);
+      line-height: 1.2;
+      color: var(--on-surface);
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    .washi-card .note {
+      color: var(--secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    /* Section framing */
+    .section-block {
+      padding: var(--space-2xl) 0;
+      border-bottom: var(--rule-linen);
+    }
+    .section-header {
+      display: grid;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-xl);
+      max-width: 68ch;
+    }
+    .section-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: var(--headline-size);
+      line-height: 1.2;
+      letter-spacing: -0.01em;
+      color: var(--on-surface);
+      margin: 0;
+    }
+    .section-lede {
+      color: var(--on-surface-variant);
+      margin: var(--space-xs) 0 0;
+      max-width: 62ch;
+    }
+
+    /* Buttons & Tags */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      min-height: 44px;
+      padding: 0 var(--space-md);
+      border-radius: var(--rounded);
+      font-family: var(--font-label);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      border: var(--rule-sumi);
+      background: var(--surface-container-low);
+      color: var(--on-surface);
+      transition: background-color var(--dur-short) var(--ease-out), color var(--dur-short) var(--ease-out);
+    }
+    .btn:hover {
+      background: var(--surface-container-high);
+    }
+    .btn.is-active, .btn-primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+    .btn-primary:hover {
+      background: var(--secondary);
+      border-color: var(--secondary);
+    }
+    .btn-subtle {
+      border: var(--rule-linen);
+      background: var(--background);
+      color: var(--on-surface-variant);
+    }
+    .btn-subtle.is-saved {
+      border-color: var(--tertiary);
+      color: var(--tertiary);
+      background: var(--surface-container-low);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-xs);
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--rounded);
+      border: var(--rule-linen);
+      background: var(--surface-container-low);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+    }
+    .tag-cinnabar {
+      border-color: var(--tertiary);
+      color: var(--tertiary);
+    }
+
+    /* Tables (Kiln style: 1px sumi top/bottom header, linen row dividers) */
+    .table-wrap {
+      overflow-x: auto;
+      border-top: var(--rule-sumi);
+      border-bottom: var(--rule-sumi);
+    }
+    table.kiln-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9375rem;
+    }
+    table.kiln-table thead th {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      font-weight: 500;
+      color: var(--secondary);
+      padding: var(--space-md) var(--space-sm);
+      border-bottom: var(--rule-sumi);
+      white-space: nowrap;
+    }
+    table.kiln-table tbody td {
+      padding: var(--space-md) var(--space-sm);
+      border-bottom: var(--rule-linen);
+      vertical-align: middle;
+    }
+    table.kiln-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    table.kiln-table tbody tr.is-selected-row {
+      background: var(--surface-container-low);
+    }
+    .mono-num {
+      font-family: var(--font-label);
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+
+    .flight-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-top: var(--space-lg);
+      padding: var(--space-md) var(--space-lg);
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+    }
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+    }
+
+    /* ══ PIN CORE — Scrollytelling Route Map ══ */
+    .scrolly {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+      gap: var(--space-xl);
+      align-items: start;
+    }
+    .scrolly-graphic {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: grid;
+      align-content: center;
+      margin: 0;
+      padding: var(--space-md) 0;
+    }
+    .map-frame {
+      background: var(--surface-container-low);
+      border: var(--rule-sumi);
+      border-radius: var(--rounded);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      overflow: hidden;
+    }
+    .map-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      border-bottom: var(--rule-linen);
+      background: var(--background);
+    }
+    .map-day-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+    .day-pill {
+      min-width: 34px;
+      min-height: 34px;
+      padding: 0 0.45rem;
+      border: var(--rule-linen);
+      border-radius: var(--rounded);
+      background: var(--background);
+      color: var(--on-surface-variant);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      cursor: pointer;
+      transition: background-color var(--dur-micro) var(--ease-out), color var(--dur-micro) var(--ease-out);
+    }
+    .day-pill:hover {
+      background: var(--surface-container-high);
+      color: var(--on-surface);
+    }
+    .day-pill.is-active {
+      background: var(--tertiary);
+      border-color: var(--tertiary);
+      color: var(--on-primary);
+    }
+    #route-map {
+      width: 100%;
+      height: 58vh;
+      min-height: 380px;
+      max-height: 560px;
+      background: var(--map-ocean);
+      z-index: 1;
+    }
+    .leaflet-container {
+      background: var(--map-ocean);
+      font-family: var(--font-body);
+    }
+    .map-caption-bar {
+      padding: var(--space-md);
+      border-top: var(--rule-linen);
+      background: var(--surface-container-low);
+      display: grid;
+      gap: var(--space-xs);
+    }
+    .map-caption-route {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      color: var(--on-surface);
+    }
+    .map-caption-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-md);
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+    }
+
+    .steps {
+      padding: 12vh 0 24vh;
+      display: grid;
+      gap: var(--space-xl);
+    }
+    .step {
+      min-height: 58vh;
+      display: grid;
+      align-content: center;
+    }
+    .step-card {
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-top: var(--rule-linen);
+      border-right: var(--rule-linen);
+      border-bottom: var(--rule-linen);
+      border-radius: var(--rounded);
+      padding: var(--space-lg);
+      opacity: 0.58;
+      transform: translateY(6px);
+      transition: opacity var(--dur-long) var(--ease-out), transform var(--dur-long) var(--ease-out), background-color var(--dur-short) var(--ease-out);
+      display: grid;
+      gap: var(--space-md);
+    }
+    .step.is-active .step-card {
+      opacity: 1;
+      transform: none;
+      background: var(--background);
+      border-left-color: var(--tertiary);
+    }
+    .step-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-sm);
+    }
+    .step-idx {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--tertiary);
+      letter-spacing: 0.08em;
+    }
+    .step-title {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.375rem;
+      line-height: 1.3;
+      margin: var(--space-xs) 0 0;
+      color: var(--on-surface);
+    }
+    .step-body {
+      margin: 0;
+      color: var(--on-surface);
+      max-width: 58ch;
+    }
+    .highlight-note {
+      padding: var(--space-sm) var(--space-md);
+      background: var(--surface-container);
+      border-left: 2px solid var(--secondary);
+      border-radius: var(--rounded);
+      font-size: 0.9375rem;
+      color: var(--on-surface);
+    }
+    .highlight-note strong {
+      color: var(--secondary);
+      font-family: var(--font-headline);
+    }
+    .step-logistics {
+      display: grid;
+      gap: var(--space-xs);
+      padding-top: var(--space-sm);
+      border-top: var(--rule-linen);
+      font-size: 0.875rem;
+      color: var(--on-surface-variant);
+    }
+    .logistics-row {
+      display: flex;
+      gap: var(--space-sm);
+      align-items: baseline;
+    }
+    .logistics-key {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      min-width: 3.5rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 900px) {
+      .scrolly {
+        grid-template-columns: 1fr;
+      }
+      .scrolly-graphic {
+        position: sticky;
+        top: 0;
+        height: auto;
+        z-index: 10;
+        background: var(--background);
+        padding: var(--space-sm) 0;
+        border-bottom: var(--rule-linen);
+      }
+      #route-map {
+        height: 36vh;
+        min-height: 260px;
+      }
+      .steps {
+        padding: var(--space-lg) 0 var(--space-xl);
+        gap: var(--space-lg);
+      }
+      .step {
+        min-height: auto;
+      }
+      .step-card {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    /* Mountain Trail Schematic Explorer (Day 5 & Day 6) */
+    .trail-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .trail-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: var(--space-lg);
+      align-items: start;
+    }
+    @media (max-width: 820px) {
+      .trail-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+    .trail-svg-box {
+      background: var(--surface-container-low);
+      border: var(--rule-linen);
+      border-radius: var(--rounded);
+      padding: var(--space-md);
+    }
+    .trail-svg {
+      width: 100%;
+      height: auto;
+      display: block;
+      min-height: 280px;
+    }
+    .trail-node {
+      cursor: pointer;
+    }
+    .trail-node circle {
+      transition: r var(--dur-micro) var(--ease-out), fill var(--dur-micro) var(--ease-out);
+    }
+    .trail-detail {
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+      padding: var(--space-lg);
+      display: grid;
+      gap: var(--space-md);
+    }
+    .trail-stop-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-xs);
+    }
+    .trail-stop-btn {
+      min-height: 44px;
+      padding: 0 var(--space-sm);
+      border: var(--rule-linen);
+      border-radius: var(--rounded);
+      background: var(--background);
+      color: var(--on-surface);
+      font-size: 0.8125rem;
+      cursor: pointer;
+    }
+    .trail-stop-btn.is-active {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    /* Filterable Heritage / Towns Grid */
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      margin-bottom: var(--space-lg);
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+      gap: var(--space-lg);
+    }
+    .heritage-card {
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+      padding: var(--space-lg);
+      display: grid;
+      gap: var(--space-sm);
+      align-content: start;
+      transition: background-color var(--dur-short) var(--ease-out);
+    }
+    .heritage-card:hover {
+      background: var(--surface-container);
+    }
+    .heritage-card h3 {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.25rem;
+      margin: 0;
+      line-height: 1.3;
+    }
+    .heritage-card p {
+      margin: 0;
+      font-size: 0.9375rem;
+      color: var(--on-surface-variant);
+    }
+
+    /* Stays & Culinary Matrix */
+    .stay-food-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+      gap: var(--space-md);
+    }
+    .day-guide-card {
+      background: var(--surface-container-low);
+      border: var(--rule-linen);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+      padding: var(--space-md) var(--space-lg);
+      display: grid;
+      gap: var(--space-sm);
+    }
+    .day-guide-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: var(--space-sm);
+      border-bottom: var(--rule-linen);
+      padding-bottom: var(--space-xs);
+    }
+    .day-guide-hotel {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.0625rem;
+      color: var(--on-surface);
+    }
+    .meal-list {
+      display: grid;
+      gap: var(--space-xs);
+      font-size: 0.9rem;
+    }
+    .meal-item {
+      display: flex;
+      gap: var(--space-sm);
+    }
+    .meal-period {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      min-width: 2.5rem;
+    }
+
+    /* Historical Essays */
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr));
+      gap: var(--space-lg);
+    }
+    .history-panel {
+      padding: var(--space-lg);
+      background: var(--background);
+      border-top: var(--rule-sumi);
+      border-bottom: var(--rule-linen);
+      display: grid;
+      gap: var(--space-sm);
+      align-content: start;
+    }
+    .history-panel h3 {
+      font-family: var(--font-headline);
+      font-weight: 600;
+      font-size: 1.2rem;
+      margin: 0;
+    }
+    .history-panel p {
+      margin: 0;
+      color: var(--on-surface-variant);
+      font-size: 0.9375rem;
+    }
+
+    /* Notebook / Bookmark Summary Panel */
+    .notebook-panel {
+      background: var(--surface-container-low);
+      border-left: var(--rule-sumi-left);
+      border-radius: var(--rounded);
+      padding: var(--space-lg);
+      display: grid;
+      gap: var(--space-md);
+    }
+    .notebook-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-sm);
+      align-items: center;
+    }
+    .status-msg {
+      font-family: var(--font-label);
+      font-size: var(--label-size);
+      color: var(--secondary);
+      min-height: 1.2em;
+    }
+
+    /* Footer */
+    .site-footer {
+      padding: var(--space-xl) 0 var(--space-2xl);
+      display: grid;
+      gap: var(--space-xs);
+      color: var(--on-surface-variant);
+      font-size: 0.875rem;
+    }
+
+    /* Mobile spacing */
+    @media (max-width: 640px) {
+      .wrap { padding: 0 var(--space-md); }
+      .hero { padding: var(--space-xl) 0 var(--space-lg); }
+      .hero-top { flex-direction: column-reverse; }
+      .seal-stamp { writing-mode: horizontal-tb; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Hero Masthead -->
+    <header class="hero">
+      <div class="hero-top">
+        <div class="hero-copy">
+          <span class="kicker">2027.04.17 — 04.25 · 滬 · 浙 · 皖 · 贛</span>
+          <h1 class="display-title">巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊</h1>
+          <p class="subhead-moss">跨越上海、浙江、安徽與江西四省市的順時針大環線——從外灘十里洋場與水鄉古鎮出發，登臨黃山、三清山花崗岩奇境，探訪古徽州宗族牌坊與南孔儒風，並走進義烏世界超市的九日行旅。</p>
+          <div class="hero-meta-row">
+            <span class="tag"><i data-lucide="calendar" width="14" height="14" aria-hidden="true"></i> 2027年4月17日（六）～ 4月25日（日）</span>
+            <span class="tag tag-cinnabar"><i data-lucide="compass" width="14" height="14" aria-hidden="true"></i> 上海浦東起訖・順時針大環線</span>
+          </div>
+        </div>
+        <div class="seal-stamp" aria-hidden="true">巴洛克春旅</div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="washi-card">
+          <span class="label">旅程規模</span>
+          <span class="value">9 日 8 夜</span>
+          <span class="note">春季四月中旬最佳氣候</span>
+        </div>
+        <div class="washi-card">
+          <span class="label">跨越疆域</span>
+          <span class="value">4 省市連遊</span>
+          <span class="note">上海・浙江・安徽・江西</span>
+        </div>
+        <div class="washi-card">
+          <span class="label">自然雙遺產</span>
+          <span class="value">黃山 × 三清山</span>
+          <span class="note">雙索道登頂與 5 小時高空棧道</span>
+        </div>
+        <div class="washi-card">
+          <span class="label">古今雙商都</span>
+          <span class="value">徽商 × 義烏</span>
+          <span class="note">明清牌坊群與全球小商品中心</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Section Jump Navigation -->
+    <nav class="section-nav" aria-label="行程章節快速導覽">
+      <a class="nav-link" href="#flights"><i data-lucide="plane" width="15" height="15" aria-hidden="true"></i> 航班安排</a>
+      <a class="nav-link" href="#itinerary-map"><i data-lucide="map" width="15" height="15" aria-hidden="true"></i> 九日路線地圖</a>
+      <a class="nav-link" href="#mountains"><i data-lucide="mountain" width="15" height="15" aria-hidden="true"></i> 名山勝境路線</a>
+      <a class="nav-link" href="#heritage"><i data-lucide="landmark" width="15" height="15" aria-hidden="true"></i> 古鎮與歷史文脈</a>
+      <a class="nav-link" href="#stays-food"><i data-lucide="utensils" width="15" height="15" aria-hidden="true"></i> 住宿與特色美食</a>
+      <a class="nav-link" href="#trip-notes"><i data-lucide="bookmark" width="15" height="15" aria-hidden="true"></i> 我的行程筆記</a>
+    </nav>
+
+    <!-- Section 1: Flights -->
+    <section class="section-block" id="flights">
+      <div class="section-header">
+        <span class="kicker">01 · FLIGHT OPTIONS</span>
+        <h2 class="section-title">桃園往返浦東：兩組直飛航班時刻安排</h2>
+        <p class="section-lede">團體行程提供中華航空與長榮航空兩種早去晚回方案，皆直飛上海浦東國際機場（PVG），落地後即由專車接往鄰近的川沙古鎮展開首日遊程。</p>
+      </div>
+
+      <div class="table-wrap">
+        <table class="kiln-table" id="flight-table">
+          <thead>
+            <tr>
+              <th>方案</th>
+              <th>航空公司</th>
+              <th>航段</th>
+              <th>航班代號</th>
+              <th>起飛時間</th>
+              <th>抵達時間</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-plan="A">
+              <td><strong>方案 A</strong></td>
+              <td>中華航空</td>
+              <td>去程：桃園（TPE）➔ 浦東（PVG）</td>
+              <td class="mono-num">CI 501</td>
+              <td class="mono-num">08:40</td>
+              <td class="mono-num">10:50</td>
+            </tr>
+            <tr data-plan="A">
+              <td><strong>方案 A</strong></td>
+              <td>中華航空</td>
+              <td>回程：浦東（PVG）➔ 桃園（TPE）</td>
+              <td class="mono-num">CI 504</td>
+              <td class="mono-num">19:50</td>
+              <td class="mono-num">21:50</td>
+            </tr>
+            <tr data-plan="B">
+              <td><strong>方案 B</strong></td>
+              <td>長榮航空</td>
+              <td>去程：桃園（TPE）➔ 浦東（PVG）</td>
+              <td class="mono-num">BR 712</td>
+              <td class="mono-num">09:55</td>
+              <td class="mono-num">12:05</td>
+            </tr>
+            <tr data-plan="B">
+              <td><strong>方案 B</strong></td>
+              <td>長榮航空</td>
+              <td>回程：浦東（PVG）➔ 桃園（TPE）</td>
+              <td class="mono-num">BR 721</td>
+              <td class="mono-num">20:05</td>
+              <td class="mono-num">22:00</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flight-controls">
+        <div>
+          <span class="kicker">我的偏好航班紀錄</span>
+          <div id="flight-summary" style="margin-top: var(--space-xs); font-weight: 500;">目前顯示：方案 A（中華航空 CI 501 / CI 504），上午 10:50 抵達浦東，充裕展開首日川沙古鎮行程。</div>
+        </div>
+        <div class="btn-group">
+          <button type="button" class="btn is-active" id="btn-plan-A" onclick="selectFlightPlan('A')">選擇方案 A（中華航空）</button>
+          <button type="button" class="btn" id="btn-plan-B" onclick="selectFlightPlan('B')">選擇方案 B（長榮航空）</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Sticky Scrollytelling Route Map + 9-Day Itinerary -->
+    <section class="section-block" id="itinerary-map">
+      <div class="section-header">
+        <span class="kicker">02 · DAILY CHRONICLE &amp; ROUTE MAP</span>
+        <h2 class="section-title">九日順時針大環線：隨行進路線逐步展開每日亮點</h2>
+        <p class="section-lede">左側地圖採用公開領域向量疆域底圖繪製滬浙皖贛真實地理座標。向下捲動右側每日行程，地圖將即時推進當日路段並標記核心景區；亦可點擊上方日數按鈕直接切換瀏覽。</p>
+      </div>
+
+      <div class="scrolly">
+        <figure class="scrolly-graphic">
+          <div class="map-frame">
+            <div class="map-topbar">
+              <span class="kicker" id="map-day-label">DAY 01 · 4/17</span>
+              <div class="map-day-pills" id="map-day-pills"></div>
+            </div>
+            <div id="route-map" role="region" aria-label="滬浙皖贛九日環線向量路線地圖"></div>
+            <div class="map-caption-bar">
+              <div class="map-caption-route" id="map-caption-route">第 1 天｜浦東機場 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘 ➔ 城隍廟</div>
+              <div class="map-caption-meta">
+                <span id="map-caption-region">省市：上海市</span>
+                <span id="map-caption-hotel">住宿：上海智選假日酒店</span>
+              </div>
+            </div>
+          </div>
+        </figure>
+
+        <div class="steps" id="steps"></div>
+      </div>
+    </section>
+
+    <!-- Section 3: Famous Mountains & Geological Wonders -->
+    <section class="section-block" id="mountains">
+      <div class="section-header">
+        <span class="kicker">03 · PEAKS &amp; CANYON WONDERS</span>
+        <h2 class="section-title">名山勝境徒步指南：黃山雙索道與三清山高空棧道</h2>
+        <p class="section-lede">旅程中段深入中國最負盛名的花崗岩峰林地貌。切換下方兩大山嶽路線圖，點選各個節點查看第 5 天黃山全景動線與第 6 天三清山 5 小時高空棧道環線細節。</p>
+      </div>
+
+      <div class="trail-tabs">
+        <button type="button" class="btn is-active" id="trail-tab-huangshan" onclick="switchTrail('huangshan')">第 5 天｜安徽黃山風景區動線</button>
+        <button type="button" class="btn" id="trail-tab-sanqingshan" onclick="switchTrail('sanqingshan')">第 6 天｜江西三清山 5 小時環線</button>
+      </div>
+
+      <div class="trail-panel">
+        <div class="trail-svg-box">
+          <svg class="trail-svg" id="trail-svg" viewBox="0 0 680 320" role="img" aria-label="名山登頂與棧道節點示意圖"></svg>
+        </div>
+        <div class="trail-detail">
+          <div>
+            <span class="kicker" id="trail-kicker">DAY 05 · 安徽黃山</span>
+            <h3 class="section-title" id="trail-stop-name" style="font-size: 1.5rem; margin-top: var(--space-xs);">雲谷寺纜車站（索道上山）</h3>
+          </div>
+          <p id="trail-stop-desc" style="margin: 0; color: var(--on-surface-variant);"></p>
+          <div class="tag" id="trail-stop-tag" style="justify-self: start;"></div>
+          <div>
+            <div class="kicker" style="margin-bottom: var(--space-xs);">點擊節點切換解說</div>
+            <div class="trail-stop-list" id="trail-stop-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-grid" style="margin-top: var(--space-xl);">
+        <div class="washi-card">
+          <span class="label">第 6 天夜宿 · 贛東北峽谷</span>
+          <span class="value" style="font-size: 1.45rem;">望仙谷懸崖夜景</span>
+          <p style="margin: 0; color: var(--on-surface-variant); font-size: 0.9375rem;">依山傍崖而建的傳統夯土民居與峽谷飛瀑相映，夜幕降臨後懸崖棧閣亮起金碧燈火，入住觀景渡假民宿享受仙俠般的山谷夜色與晨曦。</p>
+        </div>
+        <div class="washi-card">
+          <span class="label">第 7 天午後 · 地下奇觀</span>
+          <span class="value" style="font-size: 1.45rem;">浙江龍游石窟</span>
+          <p style="margin: 0; color: var(--on-surface-variant); font-size: 0.9375rem;">走入宏偉的地下人工石室群，近距離觀察岩壁上整齊斜紋鑿痕與支撐巨柱，探索這座至今仍保有開鑿年代與用途謎團的古代工程奇蹟。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Ancient Towns & Cultural History -->
+    <section class="section-block" id="heritage">
+      <div class="section-header">
+        <span class="kicker">04 · TOWNS, SCHOLARS &amp; COMMERCE</span>
+        <h2 class="section-title">古鎮風光與歷史文脈：水鄉、儒風、藏書樓與商都演變</h2>
+        <p class="section-lede">九日行程串起江南三大主軸——「水鄉古鎮」、「儒釋道文脈」與「古今商業脈動」。使用分類篩選，探索八大文化地標的深層故事。</p>
+      </div>
+
+      <div class="filter-bar" role="group" aria-label="文化主題篩選">
+        <button type="button" class="btn is-active" data-theme="all" onclick="filterHeritage('all', this)">全部地標（8）</button>
+        <button type="button" class="btn" data-theme="watertown" onclick="filterHeritage('watertown', this)">江南水鄉古鎮</button>
+        <button type="button" class="btn" data-theme="literati" onclick="filterHeritage('literati', this)">書香與信仰文脈</button>
+        <button type="button" class="btn" data-theme="commerce" onclick="filterHeritage('commerce', this)">古今商都脈動</button>
+      </div>
+
+      <div class="card-grid" id="heritage-grid"></div>
+
+      <div class="history-grid" style="margin-top: var(--space-xl);">
+        <article class="history-panel">
+          <span class="kicker">歷史脈絡 · 01</span>
+          <h3>衣冠南渡與南孔儒風（衢州 × 古徽州）</h3>
+          <p>北宋靖康之難後，孔子第 48 代嫡長孫孔端友負先祖楷木像南渡定居浙江衢州，使衢州成為「南孔聖地」。鄰近的皖南古徽州因群山環繞，自魏晉以來接納中原士族避戰南遷，完整保留宗法倫理、理學思想與精湛的木、石、磚「徽州三雕」。</p>
+        </article>
+        <article class="history-panel">
+          <span class="kicker">歷史脈絡 · 02</span>
+          <h3>藏書防火哲學與近代啟蒙（寧波 × 紹興）</h3>
+          <p>明嘉靖年間范欽於寧波建天一閣，取「天一生水，地六成之」五行以水克火之意守護典籍，成為中國現存最古私家藏書樓。這股浙東文風延續至清末民初，在紹興孕育出魯迅等思想啟蒙先驅，讓行程兼具古典保存與現代革新。</p>
+        </article>
+        <article class="history-panel">
+          <span class="kicker">歷史脈絡 · 03</span>
+          <h3>從十里洋場到世界超市（上海 × 義烏）</h3>
+          <p>外灘萬國建築博覽群記錄了 19 世紀開埠後東西方交匯的近代都會史；而第 8 天由尤正華好友游壽東先生導覽的義烏國際商貿城，則展現改革開放後民間從「雞毛換糖」起步、連結全球供應鏈的當代貿易傳奇。</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Section 5: Accommodations & Culinary Guide -->
+    <section class="section-block" id="stays-food">
+      <div class="section-header">
+        <span class="kicker">05 · HOSPITALITY &amp; REGIONAL CUISINE</span>
+        <h2 class="section-title">九日精選住宿推薦與各地特色美食</h2>
+        <p class="section-lede">從國際品牌商旅、黃山南大門徽派飯店（連住兩晚）、望仙谷懸崖渡假民宿到衢州萬豪酒店，搭配沿途本幫菜、寧波海鮮、湯口暖胃火鍋與友人私房佳餚。</p>
+      </div>
+
+      <div class="filter-bar" role="group" aria-label="住宿與餐食檢視模式">
+        <button type="button" class="btn is-active" onclick="filterStayFood('all', this)">顯示每日完整宿餐</button>
+        <button type="button" class="btn" onclick="filterStayFood('stays', this)">聚焦精選住宿亮點</button>
+        <button type="button" class="btn" onclick="filterStayFood('food', this)">聚焦地方風味料理</button>
+      </div>
+
+      <div class="stay-food-grid" id="stay-food-grid"></div>
+    </section>
+
+    <!-- Section 6: Personal Trip Notes & Export -->
+    <section class="section-block" id="trip-notes" style="border-bottom: none;">
+      <div class="section-header">
+        <span class="kicker">06 · TRAVELER NOTEBOOK</span>
+        <h2 class="section-title">我的巴洛克九日行前筆記</h2>
+        <p class="section-lede">您在頁面中選擇的航班偏好與收藏的每日行程亮點會自動保存於筆記本狀態中，方便行前整理與匯出分享。</p>
+      </div>
+
+      <div class="notebook-panel">
+        <div style="display: grid; gap: var(--space-xs);">
+          <span class="kicker">已選方案與收藏摘要</span>
+          <div id="notebook-flight-line" style="font-weight: 500;">航班偏好：方案 A（中華航空 CI 501 / CI 504）</div>
+          <div id="notebook-bookmarks-line" style="color: var(--on-surface-variant);">尚未收藏特定天數亮點——您可於上方「九日順時針大環線」各日卡片點擊「收藏本日亮點」。</div>
+        </div>
+
+        <div id="notebook-bookmarks-chips" style="display: flex; flex-wrap: wrap; gap: var(--space-xs);"></div>
+
+        <div class="notebook-actions">
+          <button type="button" class="btn btn-primary" onclick="exportTripNotes()">
+            <i data-lucide="download" width="15" height="15" aria-hidden="true"></i> 匯出我的行前筆記 (.txt)
+          </button>
+          <button type="button" class="btn" id="btn-reset-notes" onclick="resetTripNotes(this)">重設個人偏好</button>
+          <span class="status-msg" id="notebook-status" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div>資料來源：巴洛克之友「滬浙皖贛名山勝境、古鎮商都精彩九日遊」行程規劃表、航班時刻與文化導覽彙整。</div>
+      <div>地圖邊界資料：Natural Earth（公開領域向量幾何，無使用外部磚圖伺服器）。</div>
+    </footer>
+  </div>
+
+  <api-shim></api-shim>
+
+  <script>
+    // ── Helper: read CSS custom properties so colors stay unified in :root ──
+    function cssVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    // ── Core Itinerary Data (all strings in backticks for defensive JS) ──
+    const DAYS = [
+      {
+        day: 1,
+        date: `4/17（六）`,
+        shortLabel: `D1`,
+        region: `上海市`,
+        title: `抵達上海 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘風華 ➔ 城隍廟商圈`,
+        routeLabel: `第 1 天｜浦東機場 ➔ 川沙古鎮 ➔ 南京西路 ➔ 外灘 ➔ 城隍廟`,
+        summary: `班機抵達上海浦東國際機場後專車接機。首站前往距離機場僅約 15–20 分鐘車程的川沙古鎮，漫步護城河畔感受老上海水鄉古韻；午後前往南京西路步行街體驗繁華都會氣象，傍晚漫步外灘欣賞萬國建築博覽群與黃浦江兩岸天際線，晚間於上海城隍廟商圈自由品嚐道地小吃。`,
+        highlight: `外灘面臨黃浦江，隔江遠眺陸家嘴摩天大樓，是領略上海近現代百年風雲與璀璨夜色的核心地標。川沙古鎮則保留明代古城牆遺址與黃炎培、宋慶齡家族人文底蘊。`,
+        meals: { b: `機上輕食`, l: `川沙古鎮風味餐`, d: `上海城隍廟商圈（配合逛街自理餐）` },
+        hotel: `上海智選假日酒店`,
+        hotelNote: `浦東接機首日休憩，鄰近交通動線`,
+        center: [31.20, 121.62],
+        zoom: 6,
+        stops: [
+          { name: `上海浦東國際機場`, lat: 31.1443, lng: 121.8083, note: `專車接機啟程` },
+          { name: `川沙古鎮`, lat: 31.1920, lng: 121.6980, note: `護城河畔老上海水鄉與午餐` },
+          { name: `外灘・南京西路・城隍廟`, lat: 31.2397, lng: 121.4905, note: `萬國建築博覽群與黃浦江夜景` }
+        ]
+      },
+      {
+        day: 2,
+        date: `4/18（日）`,
+        shortLabel: `D2`,
+        region: `浙江省（寧波・紹興）`,
+        title: `杭州灣跨海大橋 ➔ 寧波天一閣博物館與月湖 ➔ 紹興水鄉`,
+        routeLabel: `第 2 天｜上海 ➔ 杭州灣跨海大橋 ➔ 寧波天一閣 ➔ 紹興`,
+        summary: `晨間專車南下，車觀跨越杭州灣海面的杭州灣跨海大橋壯麗海景，抵達甬城寧波。午後探訪中國現存歷史最悠久的私家藏書樓天一閣與月湖公園，隨後驅車前往文風鼎盛的水鄉紹興。`,
+        highlight: `天一閣建於明代嘉靖年間（寧波海曙區天一街 10 號），園林與水池環繞書樓，是江南極具代表性的私家藏書樓建築群與古典園林典範。`,
+        meals: { b: `飯店內`, l: `寧波海鮮風味料理`, d: `紹興當地特色餐` },
+        hotel: `紹興袍江智選假日酒店`,
+        hotelNote: `紹興水鄉之旅舒適下榻`,
+        center: [30.18, 121.10],
+        zoom: 6,
+        stops: [
+          { name: `杭州灣跨海大橋`, lat: 30.4530, lng: 121.1320, note: `車觀跨越杭州灣海面壯麗海景` },
+          { name: `寧波天一閣與月湖`, lat: 29.8725, lng: 121.5356, note: `明代私家藏書樓與古典園林` },
+          { name: `紹興水鄉`, lat: 30.0024, lng: 120.5820, note: `文風鼎盛的江南古城` }
+        ]
+      },
+      {
+        day: 3,
+        date: `4/19（一）`,
+        shortLabel: `D3`,
+        region: `浙江省（紹興・杭州）`,
+        title: `紹興市區精華巡禮 ➔ 西湖漫步 ➔ 靈隱古剎祈福`,
+        routeLabel: `第 3 天｜紹興魯迅故里 ➔ 杭州西湖蘇堤 ➔ 飛來峰靈隱寺`,
+        summary: `上午在紹興市區參觀著名的歷史文化街區魯迅故里，感受文人墨客的故居墨香與水鄉烏篷船韻味。午後驅車抵達杭州，漫步西湖蘇堤與花港觀魚，隨後走入西湖群山之間的飛來峰靈隱禪寺參拜。`,
+        highlight: `魯迅故里完整保存了魯迅童年生活的三味書屋與百草園，是深入探索紹興傳統台門建築與水鄉歷史的首選景點。`,
+        meals: { b: `飯店內`, l: `杭州著名麵食館`, d: `杭州特色宴` },
+        hotel: `杭州東站智選假日酒店`,
+        hotelNote: `杭州都會樞紐便利住宿`,
+        center: [30.15, 120.32],
+        zoom: 6,
+        stops: [
+          { name: `紹興魯迅故里`, lat: 29.9942, lng: 120.5835, note: `三味書屋、百草園與烏篷船` },
+          { name: `杭州西湖蘇堤・花港觀魚`, lat: 30.2420, lng: 120.1360, note: `湖光山色漫步` },
+          { name: `飛來峰靈隱禪寺`, lat: 30.2408, lng: 120.1014, note: `千年古剎參拜祈福` }
+        ]
+      },
+      {
+        day: 4,
+        date: `4/20（二）`,
+        shortLabel: `D4`,
+        region: `浙江杭州 ➔ 安徽古徽州`,
+        title: `杭州西溪濕地 ➔ 歙縣棠樾牌坊群 ➔ 徽州古城 ➔ 湯口鎮`,
+        routeLabel: `第 4 天｜西溪濕地 ➔ 棠樾牌坊群 ➔ 徽州古城 ➔ 湯口鎮`,
+        summary: `早晨前往西溪國家濕地公園搭乘搖櫓船穿越蘆葦水道；午後驅車西行跨入皖南古徽州，參觀歙縣著名的棠樾牌坊群與鮑家花園，探訪徽州古城（徽州府衙、許國石坊）並細賞木雕、石雕、磚雕之「徽州三雕」工藝。傍晚抵達黃山南大門湯口鎮。`,
+        highlight: `湯口鎮為黃山南大門必經門戶，下榻鎮中心白牆黛瓦現代徽派風格飯店並享用暖胃火鍋，為翌日登山儲備體力。`,
+        meals: { b: `飯店內`, l: `沿途著名地方料理`, d: `湯口鎮暖胃火鍋` },
+        hotel: `黃山景區湯口鎮藝龍萬國飯店`,
+        hotelNote: `連住兩晚・緊鄰黃山南大門換乘中心`,
+        center: [30.02, 119.05],
+        zoom: 6,
+        stops: [
+          { name: `西溪國家濕地公園`, lat: 30.2660, lng: 120.0650, note: `搭乘搖櫓船穿越蘆葦水道` },
+          { name: `歙縣棠樾牌坊群・鮑家花園`, lat: 29.8825, lng: 118.3945, note: `徽商宗族牌坊與園林` },
+          { name: `徽州古城`, lat: 29.8675, lng: 118.4310, note: `徽州府衙、許國石坊與徽州三雕` },
+          { name: `黃山湯口鎮`, lat: 30.0750, lng: 118.1740, note: `黃山南大門・藝龍萬國飯店連住兩晚` }
+        ]
+      },
+      {
+        day: 5,
+        date: `4/21（三）`,
+        shortLabel: `D5`,
+        region: `安徽省（黃山風景區）`,
+        title: `黃山全日奇景探訪（始信峰、北海、光明頂、鰲魚峰、玉屏樓迎客松）`,
+        routeLabel: `第 5 天｜湯口換乘 ➔ 雲谷索道 ➔ 始信峰・光明頂・迎客松 ➔ 玉屏索道`,
+        summary: `全日深入登臨黃山風景區。清晨於湯口換乘景區觀光車至雲谷寺纜車站，搭乘雲谷索道上山，漫步遊覽始信峰、北海景區遠眺猴子觀海；隨後翻越光明頂遠眺天海，經鰲魚峰、穿百步雲梯，抵達玉屏樓仰望千年迎客松。最後搭乘玉屏索道下山至慈光閣，搭環保車返回湯口鎮。`,
+        highlight: `黃山風景區以奇松、怪石、雲海、溫泉「四絕」名冠天下，春季登頂常能欣賞到壯闊雲海與千姿百態的奇峰絕壁。`,
+        meals: { b: `飯店內`, l: `黃山景區高山觀景餐廳`, d: `徽州道地料理` },
+        hotel: `黃山景區湯口鎮藝龍萬國飯店（續住）`,
+        hotelNote: `免換飯店，下山即可安心休息`,
+        center: [30.12, 118.17],
+        zoom: 6,
+        stops: [
+          { name: `黃山風景區（雲谷索道—始信峰—光明頂—玉屏樓）`, lat: 30.1333, lng: 118.1667, note: `奇松、怪石、雲海全日精華縱走` }
+        ]
+      },
+      {
+        day: 6,
+        date: `4/22（四）`,
+        shortLabel: `D6`,
+        region: `江西省（上饒）`,
+        title: `黃山出發 ➔ 江西道教仙山「三清山」（5小時精華環線）➔ 崖壁仙宿「望仙谷」`,
+        routeLabel: `第 6 天｜湯口 ➔ 江西三清山高空棧道 ➔ 望仙谷夜景`,
+        summary: `早餐後啟程前往江西上饒的世界自然遺產三清山，安排經典 5 小時懸崖高空棧道徒步環線：由金沙索道上山，串連「南清園景區」欣賞神龍戲松、巨蟒出山、東方女神，接續走「陽光海岸高空棧道」與「西海岸高空棧道」，俯瞰萬丈深谷與奇石奇松後索道下山。傍晚抵達望仙谷風景區入住觀景民宿，欣賞懸樓點燈夜景。`,
+        highlight: `三清山被譽為西太平洋邊緣最美麗的花崗岩地貌；望仙谷依山傍崖而建，將贛東北夯土民居與峽谷水系結合，夜幕點燈後宛如真實版仙俠世界。`,
+        meals: { b: `飯店內`, l: `三清山當地土雞農家菜`, d: `望仙谷贛東特色農家風味` },
+        hotel: `望仙谷觀景渡假民宿`,
+        hotelNote: `夜宿峽谷景區內，盡覽點燈奇幻夜景`,
+        center: [28.76, 118.00],
+        zoom: 6,
+        stops: [
+          { name: `三清山風景區`, lat: 28.9120, lng: 118.0650, note: `5 小時懸崖高空棧道環線` },
+          { name: `望仙谷風景區`, lat: 28.5980, lng: 117.9150, note: `懸崖棧閣夜景與觀景渡假民宿` }
+        ]
+      },
+      {
+        day: 7,
+        date: `4/23（五）`,
+        shortLabel: `D7`,
+        region: `浙江省（衢州・龍游）`,
+        title: `望仙谷晨曦 ➔ 衢州古城（水亭門） ➔ 龍游石窟`,
+        routeLabel: `第 7 天｜望仙谷晨曦 ➔ 衢州水亭門古城 ➔ 龍游石窟`,
+        summary: `清晨在望仙谷幽靜峽谷中醒來，隨後專車開往浙江「南孔聖地」衢州。參觀衢州古城（水亭門歷史文化街區、古城牆），感受儒風流芳的江南古城氛圍；午後專車前往探訪被譽為「地下奇觀」的龍游石窟，深入地下石室群，探索千古未解的宏偉人工石窟與雕刻謎團。`,
+        highlight: `南孔聖地衢州傳承靖康南渡後的江南儒學文脈；龍游石窟則以宏偉地下人工鑿刻石室名列世界建築考古之謎。`,
+        meals: { b: `民宿或酒店內`, l: `由錡錡特別安排之在地精選料理`, d: `衢州當地特色餐廳` },
+        hotel: `衢州萬豪酒店`,
+        hotelNote: `國際五星品牌舒適禮遇`,
+        center: [28.98, 118.95],
+        zoom: 6,
+        stops: [
+          { name: `衢州古城・水亭門`, lat: 28.9635, lng: 118.8670, note: `南孔聖地儒風古城牆` },
+          { name: `龍游石窟`, lat: 29.0600, lng: 119.1850, note: `探索地下千古未解石室奇觀` }
+        ]
+      },
+      {
+        day: 8,
+        date: `4/24（六）`,
+        shortLabel: `D8`,
+        region: `浙江省（金華義烏）`,
+        title: `義烏全球小商品商貿城深度參訪`,
+        routeLabel: `第 8 天｜衢州 ➔ 義烏國際商貿城（一至五區深度導覽）`,
+        summary: `早餐後前往全球知名的小商品之都——義烏。由尤正華當地好友游壽東先生帶領導覽，深度參訪義烏國際商貿城（一至五區各類工藝品、飾品、日用品及新創外貿展館），親身感受「世界超市」的蓬勃貿易生機。`,
+        highlight: `專人帶路走訪國際商貿城一至五區，看見改革開放後從草根貿易躍升為全球日用商品集散樞紐的經濟奇蹟。`,
+        meals: { b: `酒店內`, l: `配合逛商場自理餐`, d: `游壽東好友熱情安排之在地佳餚` },
+        hotel: `義烏金豪東方酒店`,
+        hotelNote: `鄰近義烏商貿核心圈`,
+        center: [29.31, 120.09],
+        zoom: 6,
+        stops: [
+          { name: `義烏國際商貿城`, lat: 29.3150, lng: 120.0950, note: `一至五區工藝品、飾品與外貿展館深度導覽` }
+        ]
+      },
+      {
+        day: 9,
+        date: `4/25（日）`,
+        shortLabel: `D9`,
+        region: `浙江嘉興 ➔ 上海浦東返台`,
+        title: `義烏出發 ➔ 烏鎮水鄉巡禮 ➔ 浦東國際機場返台`,
+        routeLabel: `第 9 天｜義烏 ➔ 嘉興烏鎮水鄉 ➔ 上海浦東機場賦歸`,
+        summary: `清晨由義烏出發經嘉興地區前往江南水鄉代表烏鎮，漫步於青石板路上，參觀古色古香的木造水閣、傳統染坊與古橋倒影，感受「小橋、流水、人家」的水鄉意境。午後享用古鎮道地風味餐後，專車平穩駛向上海浦東國際機場辦理登機手續，搭機返回桃園機場，結束九日精彩旅程。`,
+        highlight: `烏鎮景區位於浙江嘉興桐鄉市，名列江南六大古鎮之一，擁有千年水鄉歷史，完整的晚清與民國水鄉古建築風貌保存完好。`,
+        meals: { b: `酒店內`, l: `烏鎮水鄉風味餐`, d: `機上精緻簡餐` },
+        hotel: `溫暖的家`,
+        hotelNote: `晚間返抵桃園國際機場`,
+        center: [30.85, 121.15],
+        zoom: 6,
+        stops: [
+          { name: `嘉興烏鎮風景區`, lat: 30.7460, lng: 120.4860, note: `青石板路、傳統染坊與木造水閣` },
+          { name: `上海浦東國際機場`, lat: 31.1443, lng: 121.8083, note: `完成順時針大環線・搭機返台` }
+        ]
+      }
+    ];
+
+    const TRAILS = {
+      huangshan: {
+        kicker: `DAY 05 · 安徽黃山全日縱走`,
+        stops: [
+          { name: `湯口換乘・雲谷索道`, x: 70, y: 255, tag: `後山入山起點`, desc: `清晨由湯口鎮換乘景區環保觀光車至雲谷寺纜車站，搭乘雲谷索道直達山巔，輕鬆避開陡峭徒步路段。` },
+          { name: `始信峰`, x: 185, y: 165, tag: `奇松薈萃`, desc: `「不到始信峰，不見黃山松。」此處匯聚黑虎松、連理松、龍爪松等經典黃山奇松與懸崖松影。` },
+          { name: `北海景區（猴子觀海）`, x: 295, y: 140, tag: `怪石雲海`, desc: `黃山腹地開闊景區，可遠眺「猴子觀海」巧石與獅子峰一帶春季翻騰的雲海奇觀。` },
+          { name: `光明頂`, x: 405, y: 85, tag: `全山中心制高點`, desc: `黃山第二高峰，地勢開闊平坦，南眺天海與蓮花、天都諸峰，是飽覽群峰雲海的經典視角。` },
+          { name: `鰲魚峰・百步雲梯`, x: 505, y: 150, tag: `險峻岩道`, desc: `經形似巨鯨躍波的鰲魚峰，穿行依絕壁鑿出的「百步雲梯」石階，體驗黃山奇石地勢的驚險與精巧。` },
+          { name: `玉屏樓迎客松・索道下山`, x: 605, y: 235, tag: `前山經典終點`, desc: `抵達玉屏樓仰望佇立懸崖的千年「迎客松」，隨後搭乘玉屏索道下山至慈光閣，乘環保車返回湯口鎮。` }
+        ]
+      },
+      sanqingshan: {
+        kicker: `DAY 06 · 江西三清山 5 小時高空棧道環線`,
+        stops: [
+          { name: `金沙索道上山`, x: 85, y: 255, tag: `東線入口`, desc: `早餐後由黃山湯口前往江西上饒三清山，搭乘金沙索道快速攀升進入花崗岩峰林核心海拔。` },
+          { name: `南清園景區`, x: 215, y: 155, tag: `三大奇石地標`, desc: `環線最密集的花崗岩象形石群，近距離欣賞「神龍戲松」、「巨蟒出山」與「東方女神」三大代表奇景。` },
+          { name: `陽光海岸高空棧道`, x: 355, y: 95, tag: `東部懸崖平緩棧道`, desc: `修築於千米絕壁腰間的高空棧道，視野開闊且路面平緩，將三清山東部群峰與深谷盡收眼底。` },
+          { name: `西海岸高空棧道`, x: 495, y: 120, tag: `萬丈深谷縱覽`, desc: `沿西側絕壁蜿蜒的高空棧道，宛如雲端走廊，俯瞰幽深峽谷、奇松與變幻莫測的山嵐雲霧。` },
+          { name: `索道下山 ➔ 望仙谷`, x: 605, y: 245, tag: `接續峽谷夜宿`, desc: `完成約 5 小時精華環線後搭索道下山，傍晚前往望仙谷入住觀景民宿，靜待懸崖懸樓點亮金碧燈火。` }
+        ]
+      }
+    };
+
+    const HERITAGE_ITEMS = [
+      {
+        theme: `watertown`,
+        tag: `江南水鄉古鎮 · 第 1 天`,
+        title: `川沙古鎮（上海浦東）`,
+        desc: `距離浦東機場僅約 15–20 分鐘車程，保留明代防倭古城牆遺址與護城河格局，亦是黃炎培與宋慶齡家族故居所在，展現老上海寧靜水鄉韻味與本幫菜風味。`
+      },
+      {
+        theme: `literati`,
+        tag: `書香藏書樓 · 第 2 天`,
+        title: `寧波天一閣與月湖`,
+        desc: `明代嘉靖年間兵部右侍郎范欽所建，以「天一生水，地六成之」哲學祈求防火護書，是中國現存歷史最悠久的私家藏書樓與古典園林典範。`
+      },
+      {
+        theme: `literati`,
+        tag: `近代啟蒙 · 第 3 天`,
+        title: `紹興魯迅故里`,
+        desc: `完整保存三味書屋、百草園與紹興傳統台門建築群，伴隨街巷間悠緩的烏篷船影，從古典浙東文脈一路串聯至清末民初的思想啟蒙。`
+      },
+      {
+        theme: `watertown`,
+        tag: `湖山禪寺 · 第 3–4 天`,
+        title: `杭州西湖、靈隱寺與西溪濕地`,
+        desc: `漫步西湖蘇堤與花港觀魚，參拜西湖群山間的飛來峰靈隱禪寺；翌日早晨於西溪國家濕地公園搭乘搖櫓船穿越蘆葦水道。`
+      },
+      {
+        theme: `commerce`,
+        tag: `明清徽商 · 第 4 天`,
+        title: `歙縣棠樾牌坊群與徽州古城`,
+        desc: `七座忠孝節義石牌坊與鮑家花園見證稱雄商界數百年的徽商榮耀；徽州古城府衙、許國石坊則濃縮木雕、石雕、磚雕「徽州三雕」工藝精華。`
+      },
+      {
+        theme: `literati`,
+        tag: `南孔聖地 · 第 7 天`,
+        title: `衢州古城水亭門`,
+        desc: `北宋靖康南渡後孔氏宗子定居於此，使衢州成為江南儒學重鎮。漫步水亭門歷史文化街區與古城牆，感受儒風流芳的古城氛圍。`
+      },
+      {
+        theme: `commerce`,
+        tag: `當代世界超市 · 第 8 天`,
+        title: `義烏國際商貿城`,
+        desc: `由當地好友游壽東先生導覽一至五區工藝品、飾品、日用品及新創外貿展館，體驗從改革開放「雞毛換糖」走向全球供應鏈樞紐的商業脈動。`
+      },
+      {
+        theme: `watertown`,
+        tag: `江南六大古鎮 · 第 9 天`,
+        title: `嘉興烏鎮風景區`,
+        desc: `壓軸走進嘉興桐鄉的千年水鄉烏鎮，漫步青石板路，欣賞保存完好的晚清民國木造水閣、傳統染坊與古橋倒影，體驗小橋流水人家的慢活終章。`
+      }
+    ];
+
+    // ── State (persisted via notebookAppApi) ──
+    const appState = {
+      flightPlan: `A`,
+      bookmarks: [],
+      activeTrail: `huangshan`,
+      activeTrailStop: 0
+    };
+
+    let map = null;
+    let routeFullLayer = null;
+    let routeActiveLayer = null;
+    let markerLayerGroup = null;
+    let currentDayIdx = 0;
+
+    async function saveState() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.setAppState === `function`) {
+        try {
+          await window.notebookAppApi.setAppState({
+            flightPlan: appState.flightPlan,
+            bookmarks: appState.bookmarks
+          });
+        } catch (e) {
+          // Graceful no-op outside host
+        }
+      }
+    }
+
+    // ── Section 1: Flight selector ──
+    function selectFlightPlan(plan) {
+      appState.flightPlan = plan;
+      const btnA = document.getElementById(`btn-plan-A`);
+      const btnB = document.getElementById(`btn-plan-B`);
+      const summary = document.getElementById(`flight-summary`);
+      const rows = document.querySelectorAll(`#flight-table tbody tr`);
+
+      if (btnA) btnA.classList.toggle(`is-active`, plan === `A`);
+      if (btnB) btnB.classList.toggle(`is-active`, plan === `B`);
+      rows.forEach(tr => {
+        tr.classList.toggle(`is-selected-row`, tr.dataset.plan === plan);
+      });
+
+      if (summary) {
+        summary.textContent = plan === `A`
+          ? `目前選擇：方案 A（中華航空 CI 501 / CI 504）—— 08:40 桃園起飛、10:50 抵達浦東，19:50 回程返台。`
+          : `目前選擇：方案 B（長榮航空 BR 712 / BR 721）—— 09:55 桃園起飛、12:05 抵達浦東，20:05 回程返台。`;
+      }
+      updateNotebookView();
+      saveState();
+    }
+
+    // ── Section 2: Build Scrollytelling Steps & Leaflet Vector Map ──
+    function buildSteps() {
+      const stepsEl = document.getElementById(`steps`);
+      const pillsEl = document.getElementById(`map-day-pills`);
+      if (!stepsEl || !pillsEl) return;
+
+      stepsEl.innerHTML = ``;
+      pillsEl.innerHTML = ``;
+
+      DAYS.forEach((d, idx) => {
+        const isSaved = appState.bookmarks.includes(d.day);
+        pillsEl.insertAdjacentHTML(`beforeend`,
+          `<button type="button" class="day-pill ${idx === 0 ? `is-active` : ``}" data-day-pill="${idx}" onclick="jumpToDay(${idx})">${d.shortLabel}</button>`
+        );
+
+        const highlightHtml = d.highlight
+          ? `<div class="highlight-note"><strong>景點亮點：</strong>${d.highlight}</div>`
+          : ``;
+
+        stepsEl.insertAdjacentHTML(`beforeend`,
+          `<article class="step ${idx === 0 ? `is-active` : ``}" data-step="${idx}" id="day-${d.day}">
+            <div class="step-card">
+              <div class="step-head">
+                <div>
+                  <span class="step-idx">DAY 0${d.day} · ${d.date} · ${d.region}</span>
+                  <h3 class="step-title">第 ${d.day} 天：${d.title}</h3>
+                </div>
+                <button type="button" class="btn btn-subtle ${isSaved ? `is-saved` : ``}" data-bookmark-day="${d.day}" onclick="toggleBookmark(${d.day})">
+                  ${isSaved ? `已收藏` : `收藏亮點`}
+                </button>
+              </div>
+              <p class="step-body">${d.summary}</p>
+              ${highlightHtml}
+              <div class="step-logistics">
+                <div class="logistics-row"><span class="logistics-key">餐食</span><span>早／${d.meals.b} ｜ 午／${d.meals.l} ｜ 晚／${d.meals.d}</span></div>
+                <div class="logistics-row"><span class="logistics-key">住宿</span><span><strong>${d.hotel}</strong>（${d.hotelNote}）</span></div>
+              </div>
+            </div>
+          </article>`
+        );
+      });
+    }
+
+    function initMap() {
+      const mapEl = document.getElementById(`route-map`);
+      if (!mapEl || typeof L === `undefined`) return;
+
+      map = L.map(`route-map`, {
+        center: [30.15, 119.8],
+        zoom: 6,
+        maxZoom: 6,
+        minZoom: 5,
+        scrollWheelZoom: false,
+        attributionControl: true
+      });
+      map.attributionControl.setPrefix(false);
+      map.attributionControl.addAttribution(`Boundaries: Natural Earth (public domain)`);
+
+      const landColor = cssVar(`--map-land`);
+      const borderColor = cssVar(`--map-land-border`);
+      const contextLine = cssVar(`--data-context`);
+      const mossColor = cssVar(`--secondary`);
+
+      // Add subtle graticule/province reference labels (derived strictly from itinerary regions)
+      const regionLabels = [
+        { name: `上海`, lat: 31.32, lng: 121.38 },
+        { name: `浙江`, lat: 29.48, lng: 120.75 },
+        { name: `安徽`, lat: 30.28, lng: 118.25 },
+        { name: `江西`, lat: 28.72, lng: 117.70 }
+      ];
+      regionLabels.forEach(r => {
+        L.marker([r.lat, r.lng], {
+          interactive: false,
+          icon: L.divIcon({
+            className: `region-label-icon`,
+            html: `<span style="font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em; color: var(--on-surface-variant); opacity: 0.72; white-space: nowrap;">${r.name}</span>`,
+            iconSize: [40, 16]
+          })
+        }).addTo(map);
+      });
+
+      // Full clockwise loop polyline (all stops in order)
+      const allCoords = [];
+      DAYS.forEach(d => {
+        d.stops.forEach(s => allCoords.push([s.lat, s.lng]));
+      });
+      routeFullLayer = L.polyline(allCoords, {
+        color: mossColor,
+        weight: 2,
+        opacity: 0.45,
+        dashArray: `5 5`
+      }).addTo(map);
+
+      markerLayerGroup = L.layerGroup().addTo(map);
+
+      // Load Natural Earth 50m coastline & national boundaries
+      fetch(`https://cdn.jsdelivr.net/npm/world-atlas@2.0.2/countries-50m.json`)
+        .then(r => r.json())
+        .then(topo => {
+          if (typeof topojson === `undefined`) return;
+          const geo = topojson.feature(topo, topo.objects.countries);
+          const geoLayer = L.geoJSON(geo, {
+            style: {
+              fillColor: landColor,
+              fillOpacity: 1,
+              color: borderColor,
+              weight: 0.9
+            }
+          }).addTo(map);
+          geoLayer.bringToBack();
+          map.invalidateSize();
+        })
+        .catch(() => {
+          // Keeps route stops legible even if network fetch fails
+        });
+
+      renderMapForDay(0);
+    }
+
+    function renderMapForDay(idx) {
+      currentDayIdx = idx;
+      const d = DAYS[idx];
+      if (!d) return;
+
+      const labelEl = document.getElementById(`map-day-label`);
+      const routeEl = document.getElementById(`map-caption-route`);
+      const regionEl = document.getElementById(`map-caption-region`);
+      const hotelEl = document.getElementById(`map-caption-hotel`);
+
+      if (labelEl) labelEl.textContent = `DAY 0${d.day} · ${d.date}`;
+      if (routeEl) routeEl.textContent = d.routeLabel;
+      if (regionEl) regionEl.textContent = `區域：${d.region}`;
+      if (hotelEl) hotelEl.textContent = `住宿：${d.hotel}`;
+
+      document.querySelectorAll(`.day-pill`).forEach(p => {
+        p.classList.toggle(`is-active`, Number(p.dataset.dayPill) === idx);
+      });
+
+      if (!map || !markerLayerGroup) return;
+
+      markerLayerGroup.clearLayers();
+      if (routeActiveLayer) {
+        map.removeLayer(routeActiveLayer);
+        routeActiveLayer = null;
+      }
+
+      const cinnabar = cssVar(`--tertiary`);
+      const sumi = cssVar(`--on-surface`);
+      const washi = cssVar(`--surface-container-low`);
+      const moss = cssVar(`--secondary`);
+
+      // Draw previous days subtle nodes
+      DAYS.forEach((other, oIdx) => {
+        if (oIdx === idx) return;
+        other.stops.forEach(s => {
+          L.circleMarker([s.lat, s.lng], {
+            radius: 3.5,
+            color: oIdx < idx ? moss : sumi,
+            fillColor: washi,
+            fillOpacity: 0.85,
+            weight: 1.2,
+            opacity: oIdx < idx ? 0.85 : 0.4
+          }).bindTooltip(`第 ${other.day} 天：${s.name}`).addTo(markerLayerGroup);
+        });
+      });
+
+      // Active day segment (connect from previous day's last stop for continuity)
+      const activeCoords = [];
+      if (idx > 0) {
+        const prevStops = DAYS[idx - 1].stops;
+        const prevLast = prevStops[prevStops.length - 1];
+        activeCoords.push([prevLast.lat, prevLast.lng]);
+      }
+      d.stops.forEach(s => activeCoords.push([s.lat, s.lng]));
+
+      if (activeCoords.length >= 2) {
+        routeActiveLayer = L.polyline(activeCoords, {
+          color: cinnabar,
+          weight: 3.5,
+          opacity: 0.95
+        }).addTo(map);
+      }
+
+      // Active day stops
+      d.stops.forEach((s, sIdx) => {
+        const m = L.circleMarker([s.lat, s.lng], {
+          radius: 7,
+          color: sumi,
+          fillColor: cinnabar,
+          fillOpacity: 1,
+          weight: 2
+        }).bindPopup(`<strong>第 ${d.day} 天｜${s.name}</strong><br>${s.note}`).addTo(markerLayerGroup);
+        if (sIdx === d.stops.length - 1) {
+          m.bindTooltip(`${d.shortLabel}・${s.name}`, { permanent: true, direction: `top`, offset: [0, -8] });
+        }
+      });
+
+      map.flyTo(d.center, d.zoom, { duration: 0.85 });
+    }
+
+    function activateStep(idx) {
+      const nodes = document.querySelectorAll(`.scrolly .step`);
+      nodes.forEach(n => n.classList.remove(`is-active`));
+      if (nodes[idx]) nodes[idx].classList.add(`is-active`);
+      renderMapForDay(idx);
+    }
+
+    function jumpToDay(idx) {
+      const target = document.querySelector(`.scrolly .step[data-step="${idx}"]`);
+      if (target) {
+        target.scrollIntoView({ behavior: `smooth`, block: `center` });
+      }
+      activateStep(idx);
+    }
+
+    function initScrolly() {
+      const nodes = document.querySelectorAll(`.scrolly .step`);
+      if (!nodes.length) return;
+      if (window.scrollama) {
+        const sc = scrollama();
+        sc.setup({ step: `.scrolly .step`, offset: 0.52 })
+          .onStepEnter(({ index }) => activateStep(index));
+        window.addEventListener(`resize`, () => {
+          sc.resize();
+          if (map) map.invalidateSize();
+        });
+      } else {
+        const io = new IntersectionObserver(entries => {
+          entries.forEach(e => {
+            if (e.isIntersecting) activateStep(Number(e.target.dataset.step));
+          });
+        }, { rootMargin: `-40% 0px -40% 0px`, threshold: 0 });
+        nodes.forEach(n => io.observe(n));
+        window.addEventListener(`resize`, () => {
+          if (map) map.invalidateSize();
+        });
+      }
+    }
+
+    // ── Section 3: Mountain Trail Interactive SVG ──
+    function switchTrail(trailKey) {
+      appState.activeTrail = trailKey;
+      appState.activeTrailStop = 0;
+
+      const btnH = document.getElementById(`trail-tab-huangshan`);
+      const btnS = document.getElementById(`trail-tab-sanqingshan`);
+      if (btnH) btnH.classList.toggle(`is-active`, trailKey === `huangshan`);
+      if (btnS) btnS.classList.toggle(`is-active`, trailKey === `sanqingshan`);
+
+      renderTrail();
+    }
+
+    function selectTrailStop(stopIdx) {
+      appState.activeTrailStop = stopIdx;
+      renderTrail();
+    }
+
+    function renderTrail() {
+      const trail = TRAILS[appState.activeTrail];
+      const svg = document.getElementById(`trail-svg`);
+      const stopList = document.getElementById(`trail-stop-list`);
+      const kickerEl = document.getElementById(`trail-kicker`);
+      const nameEl = document.getElementById(`trail-stop-name`);
+      const descEl = document.getElementById(`trail-stop-desc`);
+      const tagEl = document.getElementById(`trail-stop-tag`);
+
+      if (!trail || !svg || !stopList) return;
+
+      const stop = trail.stops[appState.activeTrailStop] || trail.stops[0];
+      if (kickerEl) kickerEl.textContent = trail.kicker;
+      if (nameEl) nameEl.textContent = stop.name;
+      if (descEl) descEl.textContent = stop.desc;
+      if (tagEl) tagEl.textContent = stop.tag;
+
+      const sumi = cssVar(`--on-surface`);
+      const moss = cssVar(`--secondary`);
+      const cinnabar = cssVar(`--tertiary`);
+      const linen = cssVar(`--outline-variant`);
+      const washi = cssVar(`--surface-container-low`);
+      const clay = cssVar(`--surface-container`);
+
+      // Build mountain silhouette + connecting trail path
+      const pointsStr = trail.stops.map(s => `${s.x},${s.y}`).join(` `);
+      const ridgePath = appState.activeTrail === `huangshan`
+        ? `M 0,295 L 70,255 L 150,190 L 185,165 L 250,180 L 295,140 L 360,120 L 405,85 L 460,130 L 505,150 L 560,195 L 605,235 L 680,295 Z`
+        : `M 0,295 L 85,255 L 175,180 L 215,155 L 295,130 L 355,95 L 435,112 L 495,120 L 560,185 L 605,245 L 680,295 Z`;
+
+      let nodesSvg = ``;
+      trail.stops.forEach((s, i) => {
+        const active = i === appState.activeTrailStop;
+        const fillCol = active ? cinnabar : washi;
+        const strokeCol = active ? cinnabar : sumi;
+        const r = active ? 9 : 6;
+        const labelY = s.y < 130 ? s.y - 16 : s.y + 24;
+        nodesSvg += `
+          <g class="trail-node" onclick="selectTrailStop(${i})">
+            <circle cx="${s.x}" cy="${s.y}" r="22" fill="transparent"></circle>
+            <circle cx="${s.x}" cy="${s.y}" r="${r}" fill="${fillCol}" stroke="${strokeCol}" stroke-width="2"></circle>
+            <text x="${s.x}" y="${labelY}" text-anchor="middle" font-size="11.5" font-weight="${active ? 600 : 400}" fill="${active ? cinnabar : sumi}" font-family="var(--font-body)">${s.name.split(`（`)[0]}</text>
+          </g>
+        `;
+      });
+
+      svg.innerHTML = `
+        <line x1="20" y1="295" x2="660" y2="295" stroke="${linen}" stroke-width="1"></line>
+        <path d="${ridgePath}" fill="${clay}" stroke="${linen}" stroke-width="1.2"></path>
+        <polyline points="${pointsStr}" fill="none" stroke="${moss}" stroke-width="2.5" stroke-dasharray="5 4"></polyline>
+        ${nodesSvg}
+      `;
+
+      stopList.innerHTML = ``;
+      trail.stops.forEach((s, i) => {
+        stopList.insertAdjacentHTML(`beforeend`,
+          `<button type="button" class="trail-stop-btn ${i === appState.activeTrailStop ? `is-active` : ``}" onclick="selectTrailStop(${i})">${i + 1}. ${s.name}</button>`
+        );
+      });
+    }
+
+    // ── Section 4: Heritage Filter ──
+    function renderHeritage(theme) {
+      const grid = document.getElementById(`heritage-grid`);
+      if (!grid) return;
+
+      const list = theme === `all`
+        ? HERITAGE_ITEMS
+        : HERITAGE_ITEMS.filter(item => item.theme === theme);
+
+      grid.innerHTML = list.map(item => `
+        <article class="heritage-card">
+          <span class="kicker">${item.tag}</span>
+          <h3>${item.title}</h3>
+          <p>${item.desc}</p>
+        </article>
+      `).join(``);
+    }
+
+    function filterHeritage(theme, btn) {
+      document.querySelectorAll(`#heritage .filter-bar .btn`).forEach(b => b.classList.remove(`is-active`));
+      if (btn) btn.classList.add(`is-active`);
+      renderHeritage(theme);
+    }
+
+    // ── Section 5: Stays & Culinary Guide ──
+    function renderStayFood(mode) {
+      const grid = document.getElementById(`stay-food-grid`);
+      if (!grid) return;
+
+      grid.innerHTML = DAYS.map(d => {
+        const showStay = mode === `all` || mode === `stays`;
+        const showFood = mode === `all` || mode === `food`;
+
+        const stayHtml = showStay
+          ? `<div style="display: grid; gap: 2px;">
+               <span class="kicker">下榻住宿</span>
+               <span class="day-guide-hotel">${d.hotel}</span>
+               <span style="font-size: 0.84rem; color: var(--on-surface-variant);">${d.hotelNote}</span>
+             </div>`
+          : ``;
+
+        const foodHtml = showFood
+          ? `<div class="meal-list">
+               <span class="kicker">各地風味餐食</span>
+               <div class="meal-item"><span class="meal-period">早餐</span><span>${d.meals.b}</span></div>
+               <div class="meal-item"><span class="meal-period">午餐</span><span>${d.meals.l}</span></div>
+               <div class="meal-item"><span class="meal-period">晚餐</span><span>${d.meals.d}</span></div>
+             </div>`
+          : ``;
+
+        return `
+          <article class="day-guide-card">
+            <div class="day-guide-top">
+              <span class="kicker">DAY 0${d.day} · ${d.date}</span>
+              <span class="tag">${d.region}</span>
+            </div>
+            ${stayHtml}
+            ${foodHtml}
+          </article>
+        `;
+      }).join(``);
+    }
+
+    function filterStayFood(mode, btn) {
+      document.querySelectorAll(`#stays-food .filter-bar .btn`).forEach(b => b.classList.remove(`is-active`));
+      if (btn) btn.classList.add(`is-active`);
+      renderStayFood(mode);
+    }
+
+    // ── Section 6: Bookmarks & Notebook Persistence ──
+    function toggleBookmark(dayNum) {
+      const pos = appState.bookmarks.indexOf(dayNum);
+      if (pos >= 0) {
+        appState.bookmarks.splice(pos, 1);
+      } else {
+        appState.bookmarks.push(dayNum);
+        appState.bookmarks.sort((a, b) => a - b);
+      }
+
+      document.querySelectorAll(`[data-bookmark-day="${dayNum}"]`).forEach(btn => {
+        const saved = appState.bookmarks.includes(dayNum);
+        btn.classList.toggle(`is-saved`, saved);
+        btn.textContent = saved ? `已收藏` : `收藏亮點`;
+      });
+
+      updateNotebookView();
+      saveState();
+    }
+
+    function updateNotebookView() {
+      const flightLine = document.getElementById(`notebook-flight-line`);
+      const bmLine = document.getElementById(`notebook-bookmarks-line`);
+      const chipsEl = document.getElementById(`notebook-bookmarks-chips`);
+
+      if (flightLine) {
+        flightLine.textContent = appState.flightPlan === `A`
+          ? `已選航班：方案 A（中華航空 CI 501 / CI 504 ｜ TPE 08:40–10:50 PVG ｜ PVG 19:50–21:50 TPE）`
+          : `已選航班：方案 B（長榮航空 BR 712 / BR 721 ｜ TPE 09:55–12:05 PVG ｜ PVG 20:05–22:00 TPE）`;
+      }
+
+      if (bmLine && chipsEl) {
+        if (appState.bookmarks.length === 0) {
+          bmLine.textContent = `尚未收藏特定天數亮點——您可於上方「九日順時針大環線」各日卡片點擊「收藏亮點」。`;
+          chipsEl.innerHTML = ``;
+        } else {
+          bmLine.textContent = `已收藏 ${appState.bookmarks.length} 個焦點行程日（點擊標籤可快速跳轉）：`;
+          chipsEl.innerHTML = appState.bookmarks.map(dayNum => {
+            const d = DAYS.find(item => item.day === dayNum);
+            return `<button type="button" class="btn" onclick="jumpToDay(${dayNum - 1})">第 ${dayNum} 天：${d ? d.region : ``}</button>`;
+          }).join(``);
+        }
+      }
+    }
+
+    function exportTripNotes() {
+      const lines = [
+        `巴洛克之友：滬浙皖贛名山勝境、古鎮商都精彩九日遊`,
+        `行程日期：2027年4月17日（六）～ 4月25日（日）`,
+        ``,
+        `【個人偏好航班】`,
+        appState.flightPlan === `A`
+          ? `方案 A（中華航空）：去程 CI 501 (08:40-10:50) ／ 回程 CI 504 (19:50-21:50)`
+          : `方案 B（長榮航空）：去程 BR 712 (09:55-12:05) ／ 回程 BR 721 (20:05-22:00)`,
+        ``,
+        `【收藏焦點天數】`,
+        appState.bookmarks.length
+          ? appState.bookmarks.map(n => {
+              const d = DAYS.find(x => x.day === n);
+              return d ? `- 第 ${d.day} 天 (${d.date})：${d.title}｜宿：${d.hotel}` : ``;
+            }).join(`\n`)
+          : `（尚未標記特定天數）`,
+        ``,
+        `【九日完整摘要】`,
+        ...DAYS.map(d => `第 ${d.day} 天 (${d.date})：${d.title}\n  餐食：早/${d.meals.b} 午/${d.meals.l} 晚/${d.meals.d}\n  住宿：${d.hotel}`)
+      ];
+
+      const content = lines.join(`\n`);
+      const filename = `巴洛克之友_滬浙皖贛九日遊筆記.txt`;
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.triggerFileDownload === `function`) {
+        window.notebookAppApi.triggerFileDownload({
+          content: content,
+          contentType: `text/plain`,
+          encoding: `UTF-8`,
+          filename: filename
+        });
+      } else {
+        const blob = new Blob([content], { type: `text/plain;charset=utf-8` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement(`a`);
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      const status = document.getElementById(`notebook-status`);
+      if (status) status.textContent = `已匯出「${filename}」。`;
+    }
+
+    function resetTripNotes(btn) {
+      if (!btn) return;
+      if (btn.dataset.armed !== `true`) {
+        btn.dataset.armed = `true`;
+        btn.textContent = `再次點擊確認重設`;
+        return;
+      }
+      btn.dataset.armed = `false`;
+      btn.textContent = `重設個人偏好`;
+
+      appState.flightPlan = `A`;
+      appState.bookmarks = [];
+      selectFlightPlan(`A`);
+      buildSteps();
+      initScrolly();
+      updateNotebookView();
+      saveState();
+
+      const status = document.getElementById(`notebook-status`);
+      if (status) status.textContent = `已重設為預設方案 A 與空白收藏清單。`;
+    }
+
+    // ── Boot sequence ──
+    async function initApp() {
+      if (window.notebookAppApi && typeof window.notebookAppApi.getAppState === `function`) {
+        try {
+          const saved = await window.notebookAppApi.getAppState();
+          if (saved) {
+            if (saved.flightPlan === `A` || saved.flightPlan === `B`) {
+              appState.flightPlan = saved.flightPlan;
+            }
+            if (Array.isArray(saved.bookmarks)) {
+              appState.bookmarks = saved.bookmarks.filter(n => Number.isInteger(n) && n >= 1 && n <= 9);
+            }
+          }
+        } catch (e) {
+          // Proceed with defaults
+        }
+      }
+
+      buildSteps();
+      initMap();
+      initScrolly();
+      selectFlightPlan(appState.flightPlan);
+      renderTrail();
+      renderHeritage(`all`);
+      renderStayFood(`all`);
+      updateNotebookView();
+
+      if (window.lucide && typeof window.lucide.createIcons === `function`) {
+        window.lucide.createIcons();
+      }
+
+      if (window.notebookAppApi && typeof window.notebookAppApi.notifyAppReady === `function`) {
+        window.notebookAppApi.notifyAppReady();
+      }
+    }
+
+    document.addEventListener(`DOMContentLoaded`, initApp);
+  </script>
+</body>
+</html>
